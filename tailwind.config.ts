@@ -6,15 +6,45 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  // 'class' strategy: next-themes sets class="dark" on <html>
+  darkMode: 'class',
   theme: {
     extend: {
-      backgroundImage: {
-        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "gradient-conic":
-          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      colors: {
+        // Fixed accent colours — same in light and dark
+        primary:   "#1E40AF",  // Deep blue — authority, trust, independence
+        secondary: "#2D6A4F",  // Muted green — positive / "worth it" states
+        warning:   "#B45309",  // Amber — deficit / warning states
+        highlight: "#7C3AED",  // Violet — comparison badges (used sparingly)
+        // Semantic tokens driven by CSS variables (switch with .dark class)
+        background: "var(--color-background)",
+        card:       "var(--color-card)",
+        "text-main":"var(--color-text-main)",
+        muted:      "var(--color-muted)",
+        border:     "var(--color-border)",
+      },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
+      },
+      fontSize: {
+        base: ["17px", { lineHeight: "1.7" }],
+        sm:   ["15px", { lineHeight: "1.6" }],
+        h1:   ["32px", { lineHeight: "1.2", fontWeight: "700" }],
+        h2:   ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+        h3:   ["20px", { lineHeight: "1.4", fontWeight: "600" }],
+      },
+      borderRadius: {
+        DEFAULT: "8px",
+      },
+      spacing: {
+        "touch": "48px",  // Touch-friendly minimum target size
+      },
+      boxShadow: {
+        card: "0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.06)",
       },
     },
   },
   plugins: [],
 };
+
 export default config;
