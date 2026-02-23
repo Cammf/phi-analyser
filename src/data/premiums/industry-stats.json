@@ -1,0 +1,114 @@
+{
+  "_comment": "Australian private health insurance industry statistics — APRA quarterly data and AIHW reports",
+  "_sources": [
+    "https://www.apra.gov.au/quarterly-private-health-insurance-statistics",
+    "https://www.aihw.gov.au/reports/health-welfare-expenditure/private-health-insurance-use-in-australian-hospitals",
+    "https://www.ombudsman.gov.au/publications/reports/state-of-the-health-funds-report"
+  ],
+  "_verified": true,
+  "_lastVerified": "2026-02-23",
+  "_note": "Statistics based on most recent available APRA quarterly data (June 2025 quarter) and 2025-26 industry reports.",
+
+  "source": "APRA / AIHW / Private Health Insurance Ombudsman",
+
+  "participation": {
+    "_comment": "Proportion of Australian population with PHI cover",
+    "hospitalCoverRate": 0.454,
+    "hospitalCoverPeople": 12530000,
+    "hospitalCoverDescription": "45.4% of Australians (12.53 million people) hold hospital cover",
+    "extrasCoverRate": 0.551,
+    "extrasCoverPeople": 15300000,
+    "extrasCoverDescription": "55.1% of Australians (15.3 million people) hold extras cover",
+    "trend": "Hospital participation has been slowly declining from ~47% in 2015. Extras participation has remained more stable.",
+    "goldDowngrades": {
+      "description": "Approximately 400,000 policyholders downgraded from Gold to lower tiers in the 12 months to June 2025",
+      "annualDowngrades": 400000,
+      "driverDescription": "Cost-of-living pressures driving downgrades — 4.41% premium increase in 2026 (highest since 2017)"
+    }
+  },
+
+  "benefitsReturn": {
+    "_comment": "How much of each premium dollar is returned as benefits (claims paid / premiums collected)",
+    "hospitalBenefitsRatio": 0.83,
+    "hospitalBenefitsDescription": "For every $1 in hospital premiums, approximately 83 cents is paid back in hospital benefits. Down from ~90% pre-pandemic.",
+    "extrasBenefitsRatio": 0.45,
+    "extrasBenefitsRatioRange": "42-48%",
+    "extrasBenefitsDescription": "For every $1 in extras premiums, less than 45 cents is returned in extras benefits. The remainder covers insurer administration, profit margins, and risk equalisation.",
+    "combinedBenefitsRatio": 0.85,
+    "combinedBenefitsDescription": "Combined hospital + extras benefits return ratio is approximately 85 cents per dollar",
+    "implication": "Extras cover is statistically poor value for the average person — most people pay more in premiums than they claim back. Hospital cover provides much better return but is insurance against catastrophic costs, not a savings product."
+  },
+
+  "gapPayments": {
+    "_comment": "Out-of-pocket costs patients pay above what Medicare + insurer cover",
+    "averageGap": 478.42,
+    "averageGapPeriod": "June 2025 quarter",
+    "averageGapGrowth": 0.094,
+    "averageGapGrowthDescription": "Average gap increased 9.4% year-on-year to June 2025",
+    "noGapRate": 0.871,
+    "noGapRateDescription": "87.1% of in-hospital services were provided with no out-of-pocket gap — meaning the doctor accepted the insurer's payment in full",
+    "knownGapRate": 0.072,
+    "knownGapDescription": "7.2% of services had a pre-agreed 'known gap' — patient knew the gap amount before treatment",
+    "unknownGapRate": 0.057,
+    "unknownGapDescription": "5.7% of services had an unknown gap — patient may not have known the full cost before treatment",
+    "trend": "No-gap rates have been declining gradually — down from ~89% five years ago. Average gap amounts are rising faster than inflation.",
+    "medianGapWhenCharged": 250,
+    "medianGapDescription": "When a gap is charged, the median out-of-pocket amount is approximately $250"
+  },
+
+  "waitingPeriods": {
+    "_comment": "Standard waiting periods for new PHI policies — set by law",
+    "hospital": {
+      "standard": {
+        "months": 12,
+        "description": "12-month waiting period for pre-existing conditions and most hospital procedures"
+      },
+      "psychiatric": {
+        "months": 2,
+        "description": "2-month waiting period for psychiatric care, rehabilitation, and palliative care"
+      },
+      "obstetric": {
+        "months": 12,
+        "description": "12-month waiting period for pregnancy and birth-related services"
+      },
+      "preExisting": {
+        "months": 12,
+        "description": "12-month waiting period for any condition you had signs/symptoms of in the 6 months before joining"
+      }
+    },
+    "extras": {
+      "general": {
+        "months": 2,
+        "description": "2-month waiting period for most extras services"
+      },
+      "major": {
+        "months": 12,
+        "description": "12-month waiting period for major dental (crowns, bridges, orthodontics)"
+      }
+    }
+  },
+
+  "premiumIncrease2026": {
+    "averageRate": 0.0441,
+    "effectiveDate": "2026-04-01",
+    "range": {
+      "lowest": 0.0198,
+      "highest": 0.0598
+    },
+    "description": "Average 4.41% premium increase from 1 April 2026 — highest average increase since 2017 (3.95%)",
+    "context": "Driven by rising hospital costs, increased claims post-COVID, and declining participation spreading costs across fewer members"
+  },
+
+  "keyMetrics": {
+    "_comment": "Summary metrics used across the calculator for context and comparison",
+    "averageSinglePremium": 3264,
+    "averageFamilyPremium": 4908,
+    "cheapestBasicSingle": 900,
+    "cheapestBasicSingleDescription": "Approximate cheapest Basic hospital-only policy for a single adult (before rebate) — enough to avoid MLS",
+    "averagePremiumPerDay": {
+      "single": 8.94,
+      "family": 13.45
+    },
+    "extrasValueProposition": "The average Australian claims less in extras benefits than they pay in extras premiums — extras cover is a convenience product, not a financial saving for most people"
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "_comment": "Average private health insurance premiums — FY 2025-26 estimates based on APRA and industry data",
+  "_sources": [
+    "https://www.apra.gov.au/quarterly-private-health-insurance-statistics",
+    "https://www.privatehealth.gov.au/",
+    "https://www.health.gov.au/topics/private-health-insurance/private-health-insurance-reforms/average-premium-increases"
+  ],
+  "_verified": true,
+  "_lastVerified": "2026-02-23",
+  "_note": "Premium figures are industry averages and vary significantly by insurer, state, excess, and inclusions. Used for calculator estimates only — users should check real policy prices on privatehealth.gov.au.",
+
+  "financialYear": "2025-26",
+  "source": "APRA Quarterly Private Health Insurance Statistics / privatehealth.gov.au",
+  "premiumIncreaseApplied": "2026-04-01",
+  "averageIncreaseRate": 0.0441,
+
+  "hospitalPremiums": {
+    "_comment": "Average annual hospital-only premiums by tier for a single adult, no LHC loading, before rebate. Based on industry averages as at April 2026.",
+
+    "single": {
+      "gold": {
+        "label": "Gold",
+        "annualPremium": 3555,
+        "monthlyPremium": 296.25,
+        "description": "Covers all hospital services including cardiac, pregnancy, joint replacements, psychiatric, palliative care, and rehabilitation"
+      },
+      "silver": {
+        "label": "Silver",
+        "annualPremium": 2475,
+        "monthlyPremium": 206.25,
+        "description": "Covers most hospital services — excludes some elective procedures like weight loss surgery, assisted reproduction, and some cosmetic"
+      },
+      "bronze": {
+        "label": "Bronze",
+        "annualPremium": 1357,
+        "monthlyPremium": 113.08,
+        "description": "Core hospital cover with restricted access to many services — limited to rehabilitation, psychiatric, and palliative care beyond the minimum"
+      },
+      "basic": {
+        "label": "Basic",
+        "annualPremium": 1063,
+        "monthlyPremium": 88.58,
+        "description": "Very limited cover — rehabilitation, psychiatric, and palliative care only. Essentially a tax product to avoid MLS"
+      }
+    },
+
+    "familyMultipliers": {
+      "_comment": "Multiply single premium by these factors for other policy types. Industry average ratios.",
+      "couple": 1.90,
+      "family": 2.00,
+      "singleParent": 1.50
+    },
+
+    "excessOptions": {
+      "_comment": "Common excess (front-end deductible) levels. Higher excess = lower premium.",
+      "levels": [
+        { "excess": 250, "typicalDiscountRange": "5-10%" },
+        { "excess": 500, "typicalDiscountRange": "10-18%" },
+        { "excess": 750, "typicalDiscountRange": "15-25%" }
+      ],
+      "maxExcessForMLS": {
+        "single": 750,
+        "coupleOrFamily": 1500
+      }
+    }
+  },
+
+  "extrasPremiums": {
+    "_comment": "Average annual extras (general treatment) premiums for a single adult. Extras cover is separate from hospital cover.",
+
+    "single": {
+      "basic": {
+        "label": "Basic Extras",
+        "annualPremium": 540,
+        "monthlyPremium": 45.00,
+        "typicalInclusions": ["Dental (preventive only)", "Optical (basic)", "Limited physio"],
+        "typicalAnnualLimits": "$300-500 per service"
+      },
+      "mid": {
+        "label": "Mid Extras",
+        "annualPremium": 900,
+        "monthlyPremium": 75.00,
+        "typicalInclusions": ["Dental (major + preventive)", "Optical", "Physio", "Chiro", "Podiatry", "Psychology"],
+        "typicalAnnualLimits": "$400-800 per service"
+      },
+      "comprehensive": {
+        "label": "Comprehensive Extras",
+        "annualPremium": 1380,
+        "monthlyPremium": 115.00,
+        "typicalInclusions": ["Dental (major + preventive + orthodontic)", "Optical", "Physio", "Chiro", "Podiatry", "Psychology", "Remedial massage", "Acupuncture", "Natural therapies"],
+        "typicalAnnualLimits": "$600-1500 per service"
+      }
+    },
+
+    "familyMultipliers": {
+      "couple": 1.80,
+      "family": 2.00,
+      "singleParent": 1.50
+    }
+  },
+
+  "combinedAverages": {
+    "_comment": "Average combined (hospital + extras) premium across all tiers and cover types, from APRA data",
+    "singleAnnual": 3264,
+    "familyAnnual": 4908,
+    "singleMonthly": 272.00,
+    "familyMonthly": 409.00
+  },
+
+  "premiumGrowth": {
+    "_comment": "Historical premium increase rates (applied each April)",
+    "current2026": 0.0441,
+    "current2026Description": "4.41% average increase from 1 April 2026 — highest since 2017. Range across insurers: 1.98% to 5.98%.",
+    "fiveYearAverage": 0.0335,
+    "tenYearAverage": 0.0420,
+    "longTermAverage": 0.0535,
+    "longTermAverageDescription": "5.35% average annual increase over 20+ years",
+    "recentHistory": [
+      { "year": 2026, "rate": 0.0441 },
+      { "year": 2025, "rate": 0.0300 },
+      { "year": 2024, "rate": 0.0300 },
+      { "year": 2023, "rate": 0.0293 },
+      { "year": 2022, "rate": 0.0275 },
+      { "year": 2021, "rate": 0.0266 }
+    ],
+    "projectionDefault": 0.044,
+    "projectionDefaultDescription": "Calculator default growth rate for 10-year projections — based on 2026 increase rate"
+  }
+}
