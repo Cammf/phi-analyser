@@ -1,0 +1,328 @@
+{
+  "_comment": "Average cost per visit, typical insurance benefit, and typical gap for common extras (general treatment) services — Australia",
+  "_sources": [
+    "https://www.privatehealth.gov.au/",
+    "https://www.ombudsman.gov.au/publications/reports/state-of-the-health-funds-report",
+    "https://www.ada.org.au/dental-fees",
+    "https://www.optometry.org.au/",
+    "https://ahpa.com.au/",
+    "https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/private-health-insurance-rebate"
+  ],
+  "_verified": true,
+  "_lastVerified": "2026-02-23",
+  "_note": "Service costs and insurance benefits are national estimates — actual fees vary significantly by provider, location, and insurer. Use as indicative values only. Sub-limits vary widely between policies.",
+
+  "source": "Australian Dental Association / Private Health Insurance Ombudsman / industry data",
+
+  "services": {
+    "dentalCheckup": {
+      "label": "Dental Check-up & Clean",
+      "category": "Dental (Preventive)",
+      "itemNumbers": ["011", "022", "023", "114"],
+      "costPerVisit": {
+        "min": 200,
+        "max": 350,
+        "typical": 270,
+        "description": "Annual exam, x-rays, and scale & clean — common annual preventive package"
+      },
+      "insuranceBenefit": {
+        "typical": 175,
+        "min": 130,
+        "max": 220,
+        "coverageNote": "Preventive dental is included from Basic extras onwards"
+      },
+      "typicalGap": {
+        "typical": 95,
+        "min": 50,
+        "max": 150,
+        "description": "Out-of-pocket after insurance benefit"
+      },
+      "typicalFrequency": "Once per year",
+      "annualSubLimitRange": {
+        "basic": { "min": 250, "max": 400 },
+        "mid": { "min": 400, "max": 700 },
+        "comprehensive": { "min": 600, "max": 1200 }
+      },
+      "notes": "Waiting period: typically 2 months for new policies. No-gap dental packages often available at participating dentists."
+    },
+
+    "dentalFilling": {
+      "label": "Dental Filling",
+      "category": "Dental (General)",
+      "itemNumbers": ["511", "521", "531"],
+      "costPerVisit": {
+        "min": 180,
+        "max": 400,
+        "typical": 280,
+        "description": "Cost per filling — anterior (front) teeth cheaper; posterior (molar) more expensive. Composite resin most common."
+      },
+      "insuranceBenefit": {
+        "typical": 130,
+        "min": 80,
+        "max": 200,
+        "coverageNote": "General dental included from most Basic extras; better benefits from Mid and Comprehensive"
+      },
+      "typicalGap": {
+        "typical": 150,
+        "min": 80,
+        "max": 220,
+        "description": "Gap is often significant — many insurers have fixed benefit tables that don't keep up with fee increases"
+      },
+      "typicalFrequency": "As needed (average 1–2 per year for adults)",
+      "annualSubLimitRange": {
+        "basic": { "min": 250, "max": 400 },
+        "mid": { "min": 400, "max": 700 },
+        "comprehensive": { "min": 600, "max": 1200 }
+      },
+      "notes": "Fillings share the dental annual sub-limit with check-ups — budget accordingly."
+    },
+
+    "dentalMajor": {
+      "label": "Crown or Bridge",
+      "category": "Dental (Major)",
+      "itemNumbers": ["613", "615", "618", "627"],
+      "costPerVisit": {
+        "min": 1200,
+        "max": 2800,
+        "typical": 1800,
+        "description": "Cost per crown (porcelain on metal or full ceramic). Bridge costs multiply by number of units."
+      },
+      "insuranceBenefit": {
+        "typical": 550,
+        "min": 250,
+        "max": 900,
+        "coverageNote": "Major dental typically requires Mid or Comprehensive cover. Basic extras do not cover major dental."
+      },
+      "typicalGap": {
+        "typical": 1250,
+        "min": 600,
+        "max": 2000,
+        "description": "Gaps on major dental are the largest of any extras service — insurance covers only 30–50% of typical cost"
+      },
+      "typicalFrequency": "As needed (typically once per tooth; 10–20 year lifespan)",
+      "waitingPeriodMonths": 12,
+      "annualSubLimitRange": {
+        "mid": { "min": 500, "max": 1000 },
+        "comprehensive": { "min": 1000, "max": 2500 }
+      },
+      "notes": "12-month waiting period on major dental for new policies. Most expensive extras category — a single crown can exhaust your annual limit."
+    },
+
+    "optical": {
+      "label": "Glasses or Contact Lenses",
+      "category": "Optical",
+      "costPerVisit": {
+        "min": 200,
+        "max": 800,
+        "typical": 450,
+        "description": "Cost of frames + lenses varies widely by brand and prescription complexity. Basic frames from $200; premium brands $600+"
+      },
+      "insuranceBenefit": {
+        "typical": 250,
+        "min": 150,
+        "max": 350,
+        "coverageNote": "Most extras policies include optical. Benefit is typically a flat annual limit, not per-item."
+      },
+      "typicalGap": {
+        "typical": 200,
+        "min": 50,
+        "max": 500,
+        "description": "Gap depends on frame/lens choice — buying entry-level frames from a participating provider can eliminate or reduce the gap"
+      },
+      "typicalFrequency": "Every 1–2 years",
+      "annualSubLimitRange": {
+        "basic": { "min": 150, "max": 250 },
+        "mid": { "min": 200, "max": 350 },
+        "comprehensive": { "min": 300, "max": 500 }
+      },
+      "notes": "Optical benefit often resets every 1–2 years, not annually. Check your policy's optical benefit cycle. OPSM, Specsavers, and Bailey Nelson have no-gap deals with some insurers."
+    },
+
+    "physio": {
+      "label": "Physiotherapy",
+      "category": "Allied Health",
+      "costPerVisit": {
+        "min": 80,
+        "max": 150,
+        "typical": 100,
+        "description": "Standard 30–45 minute physiotherapy consultation"
+      },
+      "insuranceBenefit": {
+        "typical": 45,
+        "min": 30,
+        "max": 65,
+        "coverageNote": "Physiotherapy included in most Mid and Comprehensive extras. Limited or excluded in Basic."
+      },
+      "typicalGap": {
+        "typical": 55,
+        "min": 30,
+        "max": 90,
+        "description": "Gap per visit is typically $30–$90 — benefits often don't keep pace with fee increases"
+      },
+      "typicalFrequency": "6–12 sessions per course of treatment, 1–3 courses per year",
+      "annualSubLimitRange": {
+        "basic": { "min": 0, "max": 200, "note": "Often excluded from Basic" },
+        "mid": { "min": 300, "max": 600 },
+        "comprehensive": { "min": 500, "max": 900 }
+      },
+      "perVisitLimit": {
+        "typical": 45,
+        "description": "Most policies pay a fixed amount per visit (e.g., $45/visit) regardless of actual fee"
+      },
+      "notes": "Annual sub-limit for physio is shared with other allied health (chiro, massage) on many policies. Heavy users can exhaust limits quickly."
+    },
+
+    "chiropractic": {
+      "label": "Chiropractic",
+      "category": "Allied Health",
+      "costPerVisit": {
+        "min": 65,
+        "max": 120,
+        "typical": 85,
+        "description": "Standard chiropractic consultation — initial assessments higher"
+      },
+      "insuranceBenefit": {
+        "typical": 40,
+        "min": 25,
+        "max": 55,
+        "coverageNote": "Chiropractic included in most Mid and Comprehensive extras. Often excluded or very limited in Basic."
+      },
+      "typicalGap": {
+        "typical": 45,
+        "min": 25,
+        "max": 65,
+        "description": "Gap per visit"
+      },
+      "typicalFrequency": "6–24 sessions per year depending on condition",
+      "annualSubLimitRange": {
+        "basic": { "min": 0, "max": 150, "note": "Often excluded from Basic" },
+        "mid": { "min": 300, "max": 500 },
+        "comprehensive": { "min": 400, "max": 700 }
+      },
+      "notes": "Often shares the allied health sub-limit with physio, remedial massage, and podiatry."
+    },
+
+    "psychology": {
+      "label": "Psychology",
+      "category": "Mental Health / Allied Health",
+      "costPerVisit": {
+        "min": 180,
+        "max": 350,
+        "typical": 250,
+        "description": "Standard 50-minute psychology session. Medicare Better Access rebate ($137.05 per session up to 10/year) significantly offsets costs."
+      },
+      "medicareRebate": {
+        "perSession": 137.05,
+        "sessionsPerYear": 10,
+        "description": "Medicare Better Access provides rebates for up to 10 sessions per calendar year with a GP referral"
+      },
+      "insuranceBenefit": {
+        "typical": 60,
+        "min": 0,
+        "max": 120,
+        "coverageNote": "Psychology cover varies greatly by policy. Some Mid policies exclude it; Comprehensive typically includes it."
+      },
+      "typicalGap": {
+        "afterMedicareAndInsurance": {
+          "typical": 55,
+          "min": 0,
+          "max": 140,
+          "description": "Out-of-pocket after both Medicare rebate and insurance benefit"
+        },
+        "withoutInsurance": {
+          "typical": 113,
+          "description": "Out-of-pocket after Medicare rebate only"
+        }
+      },
+      "annualSubLimitRange": {
+        "mid": { "min": 0, "max": 600, "note": "Variable — check policy carefully" },
+        "comprehensive": { "min": 400, "max": 1200 }
+      },
+      "notes": "Medicare Better Access (GP Mental Health Care Plan) provides 10 sessions/year at subsidised rates regardless of PHI. PHI extras can top up beyond the Medicare benefit."
+    },
+
+    "podiatry": {
+      "label": "Podiatry",
+      "category": "Allied Health",
+      "costPerVisit": {
+        "min": 80,
+        "max": 130,
+        "typical": 100,
+        "description": "Standard podiatry consultation including nail care, biomechanical assessment, or orthotic fitting"
+      },
+      "insuranceBenefit": {
+        "typical": 40,
+        "min": 25,
+        "max": 55,
+        "coverageNote": "Podiatry included in most Mid and Comprehensive extras"
+      },
+      "typicalGap": {
+        "typical": 60,
+        "min": 30,
+        "max": 80
+      },
+      "annualSubLimitRange": {
+        "mid": { "min": 200, "max": 400 },
+        "comprehensive": { "min": 300, "max": 600 }
+      }
+    },
+
+    "remedialMassage": {
+      "label": "Remedial Massage",
+      "category": "Allied Health",
+      "costPerVisit": {
+        "min": 70,
+        "max": 130,
+        "typical": 95,
+        "description": "Standard 60-minute remedial massage by a registered therapist"
+      },
+      "insuranceBenefit": {
+        "typical": 35,
+        "min": 20,
+        "max": 55,
+        "coverageNote": "Included in most Comprehensive extras; many Mid policies also include it"
+      },
+      "typicalGap": {
+        "typical": 60,
+        "min": 30,
+        "max": 80
+      },
+      "annualSubLimitRange": {
+        "mid": { "min": 200, "max": 400 },
+        "comprehensive": { "min": 400, "max": 700 }
+      },
+      "notes": "Benefit levels for remedial massage are often lower than physio/chiro."
+    }
+  },
+
+  "breakEvenAnalysis": {
+    "_comment": "At what annual usage level does extras cover break even vs cost of premium?",
+    "methodology": "Compare annual extras premium cost to total expected insurance benefits. If benefits < premium, extras is not financially rational.",
+    "averageExtrasPremiumSingle": 683,
+    "typicalBenefitsRatio": 0.44,
+    "averageAnnualBenefitPaid": 300,
+    "insight": "The average Australian with extras cover claims approximately $300 in benefits per year — well below the typical $540–$900 annual premium for extras cover. Extras insurance is financially rational only for heavy users (e.g., regular physio, glasses every year, frequent dental work).",
+    "breakEvenExamples": [
+      {
+        "scenario": "Annual dental check-up + glasses every 2 years",
+        "estimatedBenefit": 270,
+        "breakEven": false,
+        "note": "Benefits ~$270/yr — below even Basic extras premium ($540/yr)"
+      },
+      {
+        "scenario": "Annual dental check-up + 12 physio sessions + glasses",
+        "estimatedBenefit": 795,
+        "breakEven": true,
+        "coverRecommended": "Mid",
+        "note": "Benefits ~$795/yr — justifies Mid extras ($900/yr) for most users"
+      },
+      {
+        "scenario": "Annual dental + major dental work + physio + glasses",
+        "estimatedBenefit": 1400,
+        "breakEven": true,
+        "coverRecommended": "Comprehensive",
+        "note": "Major dental year — Comprehensive ($1,380/yr) breaks even"
+      }
+    ]
+  }
+}

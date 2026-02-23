@@ -1,0 +1,186 @@
+{
+  "_comment": "Ambulance cover by Australian state and territory — costs and coverage rules",
+  "_sources": [
+    "https://www.qld.gov.au/emergency/ambulance",
+    "https://www.ambulance.nsw.gov.au/fees-and-billing",
+    "https://www.ambulance.vic.gov.au/fees-and-subscriptions",
+    "https://www.esas.sa.gov.au/fees",
+    "https://www.ambulancewest.com.au/fees-and-membership",
+    "https://www.stjohn.org.au/tasmania/fees",
+    "https://www.stjohn.org.au/act/fees",
+    "https://www.stjohn.org.au/nt"
+  ],
+  "_verified": true,
+  "_lastVerified": "2026-02-23",
+  "_note": "Ambulance fees vary by distance, call type, and circumstances. Costs listed are typical emergency transport charges. Residents of free states are covered within their state only — interstate travel may incur costs.",
+
+  "source": "State and territory ambulance services",
+
+  "importantNotes": [
+    "Ambulance cover within PHI (extras or hospital cover) typically covers emergency and medically necessary transport",
+    "Even in 'free' states, cover only applies to state residents — interstate travel is not automatically covered",
+    "QLD and TAS residents still benefit from ambulance cover in PHI for interstate travel",
+    "VIC concession card holders receive free ambulance — check eligibility before purchasing cover"
+  ],
+
+  "states": {
+    "QLD": {
+      "stateName": "Queensland",
+      "freeForAllResidents": true,
+      "coverageDescription": "Free ambulance service for all Queensland residents — funded by the state government via the Queensland Ambulance Service levy",
+      "levyInclusion": "Included in electricity bills for most households",
+      "costWithoutCover": {
+        "amount": 0,
+        "description": "No charge for QLD residents receiving QAS services within Queensland"
+      },
+      "phiRecommendation": "Low priority for residents only travelling within QLD. Consider ambulance cover if travelling interstate regularly.",
+      "interstateCoverage": "Interstate transport NOT covered by QAS — PHI ambulance cover recommended for interstate travellers"
+    },
+
+    "TAS": {
+      "stateName": "Tasmania",
+      "freeForAllResidents": true,
+      "coverageDescription": "Free ambulance service for all Tasmanian residents provided by Ambulance Tasmania",
+      "costWithoutCover": {
+        "amount": 0,
+        "description": "No charge for TAS residents receiving Ambulance Tasmania services within Tasmania"
+      },
+      "phiRecommendation": "Low priority for residents only travelling within TAS. Consider ambulance cover for interstate travel.",
+      "interstateCoverage": "Interstate transport NOT covered — PHI ambulance cover recommended for interstate travellers"
+    },
+
+    "VIC": {
+      "stateName": "Victoria",
+      "freeForAllResidents": false,
+      "partiallyFree": true,
+      "partialCoverageDescription": "Free for concession card holders (Centrelink health care cards, pension concession cards, DVA gold cards). Others must pay or subscribe.",
+      "subscriptionCost": {
+        "single": 48,
+        "family": 96,
+        "period": "annual",
+        "description": "Ambulance Victoria subscription — covers unlimited emergency call-outs",
+        "note": "Subscription rate as at 2026. Cover applies statewide."
+      },
+      "costWithoutCover": {
+        "emergency": {
+          "min": 1282,
+          "description": "Emergency ambulance transport: approximately $1,282+ depending on distance and treatment"
+        },
+        "nonEmergency": {
+          "min": 441,
+          "description": "Non-emergency patient transport: approximately $441+"
+        }
+      },
+      "phiRecommendation": "Important for non-concession VIC residents unless subscribing to Ambulance Victoria separately",
+      "interstateCoverage": "Interstate transport not covered by AV subscription — PHI cover recommended"
+    },
+
+    "NSW": {
+      "stateName": "New South Wales",
+      "freeForAllResidents": false,
+      "partiallyFree": false,
+      "costWithoutCover": {
+        "emergency": {
+          "min": 401,
+          "max": 6571,
+          "description": "Emergency ambulance: $401 for local transport, up to $6,571+ for long-distance or air transport. Fixed flag fall + per-kilometre charges.",
+          "flagFall": 401,
+          "perKm": 3.77
+        },
+        "nonEmergency": {
+          "min": 401,
+          "description": "Non-emergency transport: $401 minimum"
+        }
+      },
+      "phiRecommendation": "High priority — NSW has among the highest ambulance costs in Australia. Air ambulance can exceed $10,000.",
+      "interstateCoverage": "Interstate transport not covered"
+    },
+
+    "SA": {
+      "stateName": "South Australia",
+      "freeForAllResidents": false,
+      "partiallyFree": false,
+      "costWithoutCover": {
+        "emergency": {
+          "min": 1046,
+          "description": "Emergency ambulance transport: approximately $1,046 for standard road transport. Air transport significantly higher.",
+          "perKm": 8.36,
+          "note": "Per-kilometre charge applies beyond a standard base distance"
+        }
+      },
+      "phiRecommendation": "High priority for SA residents without concession card",
+      "interstateCoverage": "Interstate transport not covered"
+    },
+
+    "WA": {
+      "stateName": "Western Australia",
+      "freeForAllResidents": false,
+      "partiallyFree": true,
+      "partialCoverageDescription": "Free for Pensioner Concession Card holders, children under 3, and some other groups. St John WA operates ambulance services.",
+      "subscriptionCost": {
+        "single": 63,
+        "family": 92,
+        "period": "annual",
+        "description": "St John Ambulance WA subscription",
+        "note": "Subscription rates as at 2026"
+      },
+      "costWithoutCover": {
+        "emergency": {
+          "min": 943,
+          "max": 2000,
+          "description": "Emergency ambulance transport: typically $943–$2,000+ depending on distance. WA is geographically vast — remote area transport can be very expensive.",
+          "airTransport": {
+            "description": "Air ambulance (RFDS) can cost $10,000–$50,000+ for remote transport"
+          }
+        }
+      },
+      "phiRecommendation": "High priority — especially in regional/remote WA where air transport costs can be extreme",
+      "interstateCoverage": "Interstate transport not covered by St John subscription"
+    },
+
+    "ACT": {
+      "stateName": "Australian Capital Territory",
+      "freeForAllResidents": false,
+      "partiallyFree": true,
+      "partialCoverageDescription": "Complex arrangement — ACT uses NSW Ambulance. Concession card holders may have reduced charges.",
+      "costWithoutCover": {
+        "emergency": {
+          "min": 401,
+          "max": 4000,
+          "description": "ACT uses NSW Ambulance Service — charges similar to NSW. Emergency transport from $401, can be much higher for complex cases."
+        }
+      },
+      "phiRecommendation": "Recommended for non-concession ACT residents",
+      "interstateCoverage": "Interstate transport not covered"
+    },
+
+    "NT": {
+      "stateName": "Northern Territory",
+      "freeForAllResidents": false,
+      "partiallyFree": true,
+      "partialCoverageDescription": "Partial subsidies apply for NT residents. St John Ambulance NT operates services. Concession holders have reduced charges.",
+      "costWithoutCover": {
+        "emergency": {
+          "min": 636,
+          "description": "Emergency ground transport approximately $636. Air transport (RFDS) costs dramatically higher in remote NT — can exceed $15,000–$30,000.",
+          "airTransport": {
+            "description": "Royal Flying Doctor Service (RFDS) air transport for remote areas can cost $15,000–$30,000+"
+          }
+        }
+      },
+      "phiRecommendation": "High priority — NT has significant remote areas where RFDS air transport is required. Costs can be extreme.",
+      "interstateCoverage": "Interstate transport not covered"
+    }
+  },
+
+  "summaryTable": [
+    { "state": "QLD", "freeForResidents": true, "typicalEmergencyCost": 0, "phiPriority": "Low (interstate only)" },
+    { "state": "TAS", "freeForResidents": true, "typicalEmergencyCost": 0, "phiPriority": "Low (interstate only)" },
+    { "state": "VIC", "freeForResidents": false, "partialFree": true, "typicalEmergencyCost": 1282, "phiPriority": "Medium (non-concession)" },
+    { "state": "NSW", "freeForResidents": false, "typicalEmergencyCost": 401, "typicalMaxCost": 6571, "phiPriority": "High" },
+    { "state": "SA",  "freeForResidents": false, "typicalEmergencyCost": 1046, "phiPriority": "High" },
+    { "state": "WA",  "freeForResidents": false, "typicalEmergencyCost": 943, "phiPriority": "High" },
+    { "state": "ACT", "freeForResidents": false, "typicalEmergencyCost": 401, "phiPriority": "Medium-High" },
+    { "state": "NT",  "freeForResidents": false, "typicalEmergencyCost": 636, "phiPriority": "High (critical for remote areas)" }
+  ]
+}

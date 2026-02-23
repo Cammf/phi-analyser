@@ -1,0 +1,177 @@
+{
+  "_comment": "Public vs private hospital median wait times for elective procedures — Australia",
+  "_sources": [
+    "https://www.aihw.gov.au/reports/hospitals/elective-surgery-waiting-times-2023-24",
+    "https://www.aihw.gov.au/reports/hospitals/australian-hospital-statistics",
+    "https://www.privatehospitals.com.au/"
+  ],
+  "_verified": true,
+  "_lastVerified": "2026-02-23",
+  "_note": "Public wait times are AIHW national medians for FY 2023-24. Private wait times are industry estimates — actual wait depends on specialist availability. 90th percentile means 90% of patients waited less than this time.",
+
+  "source": "Australian Institute of Health and Welfare (AIHW) — Elective Surgery Waiting Times 2023-24",
+  "reportingYear": "2023-24",
+
+  "procedures": [
+    {
+      "id": "knee_replacement",
+      "label": "Knee Replacement",
+      "category": "Orthopaedic",
+      "publicWaitDays": {
+        "median": 265,
+        "percentile90": 614,
+        "description": "National median 265 days; 1 in 10 patients waits over 614 days"
+      },
+      "privateWaitDays": {
+        "typical": 60,
+        "range": "2–12 weeks",
+        "description": "Typically 4–12 weeks from referral to surgery with private cover"
+      },
+      "waitTimeSavingDays": 205,
+      "context": "Knee replacements are among the longest public waits due to high demand. Pain and mobility impact can be severe during the wait.",
+      "coverRequired": "Silver or Gold (joint replacements are excluded from Bronze and below)",
+      "urgencyCategory": "Category 2 (to be admitted within 90 days)"
+    },
+    {
+      "id": "hip_replacement",
+      "label": "Hip Replacement",
+      "category": "Orthopaedic",
+      "publicWaitDays": {
+        "median": 175,
+        "percentile90": 432,
+        "description": "National median 175 days; 1 in 10 patients waits over 432 days"
+      },
+      "privateWaitDays": {
+        "typical": 60,
+        "range": "4–10 weeks",
+        "description": "Typically 4–10 weeks from referral to surgery with private cover"
+      },
+      "waitTimeSavingDays": 115,
+      "context": "Hip replacements are highly effective at eliminating chronic hip pain and restoring mobility. Delay reduces quality of life significantly.",
+      "coverRequired": "Silver or Gold (joint replacements excluded from Bronze and below)",
+      "urgencyCategory": "Category 2 (to be admitted within 90 days)"
+    },
+    {
+      "id": "cataract",
+      "label": "Cataract Surgery",
+      "category": "Ophthalmology",
+      "publicWaitDays": {
+        "median": 88,
+        "percentile90": 257,
+        "description": "National median 88 days; 1 in 10 patients waits over 257 days"
+      },
+      "privateWaitDays": {
+        "typical": 22,
+        "range": "1–6 weeks",
+        "description": "Typically 2–6 weeks from referral to surgery with private cover"
+      },
+      "waitTimeSavingDays": 66,
+      "context": "Cataracts progressively cloud vision. Surgery is straightforward and quick. Waiting significantly impacts quality of life and driving safety.",
+      "coverRequired": "Bronze or above (cataracts are included from Bronze)",
+      "urgencyCategory": "Category 2–3 (depending on severity)"
+    },
+    {
+      "id": "septoplasty",
+      "label": "Septoplasty (Deviated Septum)",
+      "category": "ENT",
+      "publicWaitDays": {
+        "median": 332,
+        "percentile90": 689,
+        "description": "National median 332 days — one of the longest public waits. 1 in 10 waits nearly 2 years."
+      },
+      "privateWaitDays": {
+        "typical": 45,
+        "range": "4–10 weeks",
+        "description": "Typically 4–10 weeks from referral to surgery with private cover"
+      },
+      "waitTimeSavingDays": 287,
+      "context": "Septoplasty corrects a deviated nasal septum causing breathing difficulties. Public wait is extremely long despite the relatively simple procedure.",
+      "coverRequired": "Bronze or above",
+      "urgencyCategory": "Category 3 (elective, within 365 days)"
+    },
+    {
+      "id": "tonsillectomy",
+      "label": "Tonsillectomy",
+      "category": "ENT",
+      "publicWaitDays": {
+        "median": 179,
+        "percentile90": 415,
+        "description": "National median 179 days for adults; children may vary"
+      },
+      "privateWaitDays": {
+        "typical": 22,
+        "range": "2–6 weeks",
+        "description": "Typically 2–6 weeks from referral to surgery with private cover"
+      },
+      "waitTimeSavingDays": 157,
+      "context": "Tonsillectomy is often needed for recurrent tonsillitis or obstructive sleep apnoea. Frequent illness during a long public wait is common.",
+      "coverRequired": "Bronze or above",
+      "urgencyCategory": "Category 2–3"
+    },
+    {
+      "id": "cabg",
+      "label": "Coronary Artery Bypass Graft (CABG)",
+      "category": "Cardiac",
+      "publicWaitDays": {
+        "median": 18,
+        "percentile90": 67,
+        "description": "National median 18 days — cardiac surgery is prioritised in the public system"
+      },
+      "privateWaitDays": {
+        "typical": 10,
+        "range": "1–3 weeks",
+        "description": "Typically 1–3 weeks with private cover"
+      },
+      "waitTimeSavingDays": 8,
+      "context": "Cardiac surgery is Category 1 (urgent) and treated promptly in public hospitals. The private advantage here is primarily about choice of surgeon and hospital, not wait time.",
+      "coverRequired": "Gold (cardiac surgery is restricted in Silver and excluded in Bronze/Basic)",
+      "urgencyCategory": "Category 1 (urgent — within 30 days)"
+    },
+    {
+      "id": "shoulder_surgery",
+      "label": "Shoulder Surgery (Rotator Cuff)",
+      "category": "Orthopaedic",
+      "publicWaitDays": {
+        "median": 245,
+        "percentile90": 580,
+        "description": "National median approximately 245 days for shoulder reconstructions"
+      },
+      "privateWaitDays": {
+        "typical": 42,
+        "range": "3–8 weeks",
+        "description": "Typically 3–8 weeks from referral to surgery with private cover"
+      },
+      "waitTimeSavingDays": 203,
+      "context": "Shoulder rotator cuff repairs and reconstructions have very long public waits. Pain and reduced arm function impact daily life and work.",
+      "coverRequired": "Silver or Gold (joint investigations may be covered from Bronze)",
+      "urgencyCategory": "Category 2–3"
+    },
+    {
+      "id": "colonoscopy",
+      "label": "Colonoscopy",
+      "category": "Gastroenterology",
+      "publicWaitDays": {
+        "median": 122,
+        "percentile90": 358,
+        "description": "National median approximately 122 days for elective colonoscopy"
+      },
+      "privateWaitDays": {
+        "typical": 14,
+        "range": "1–3 weeks",
+        "description": "Typically 1–3 weeks with private cover"
+      },
+      "waitTimeSavingDays": 108,
+      "context": "Colonoscopy is used for cancer screening, polyp removal, and bowel disease diagnosis. Early access can be critical for cancer detection.",
+      "coverRequired": "Bronze or above",
+      "urgencyCategory": "Category 2–3"
+    }
+  ],
+
+  "keyInsights": {
+    "longestPublicWaits": ["septoplasty", "knee_replacement", "shoulder_surgery"],
+    "shortestPrivateAdvantage": ["cabg"],
+    "mostCommonProcedures": ["cataract", "knee_replacement", "hip_replacement", "colonoscopy"],
+    "coverTierMatters": "Joint replacements (hip/knee/shoulder) require Silver or Gold cover — not available on Basic or Bronze. Planning surgery? Check your tier before needing it.",
+    "waitingPeriodRule": "A 12-month waiting period applies to most hospital procedures when you first join or upgrade cover. Plan ahead."
+  }
+}

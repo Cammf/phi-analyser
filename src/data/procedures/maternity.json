@@ -1,0 +1,130 @@
+{
+  "_comment": "Private vs public maternity care comparison — Australia",
+  "_sources": [
+    "https://www.aihw.gov.au/reports/mothers-babies/australias-mothers-babies",
+    "https://www.privatehealth.gov.au/",
+    "https://www.health.gov.au/topics/maternity"
+  ],
+  "_verified": true,
+  "_lastVerified": "2026-02-23",
+  "_note": "Costs are estimates — actual out-of-pocket costs vary significantly by hospital, obstetrician, and insurer agreement. Private obstetrician fees and gap costs are the most variable element.",
+
+  "source": "AIHW Australia's Mothers and Babies Report / privatehealth.gov.au",
+
+  "private": {
+    "label": "Private Hospital",
+    "coverRequired": "Gold (pregnancy and birth are excluded from all tiers below Gold)",
+    "waitingPeriod": {
+      "months": 12,
+      "description": "12-month waiting period for obstetric services — plan well ahead of intended conception"
+    },
+
+    "typicalCosts": {
+      "obstetrician": {
+        "totalFee": {
+          "min": 3500,
+          "max": 7000,
+          "typical": 5000
+        },
+        "medicareRebate": 1200,
+        "insurerBenefit": {
+          "min": 1000,
+          "max": 2500,
+          "typical": 1800
+        },
+        "outOfPocket": {
+          "min": 300,
+          "max": 3000,
+          "typical": 2000,
+          "description": "Gap fee varies widely by obstetrician — many do not participate in no-gap agreements"
+        }
+      },
+      "hospitalStay": {
+        "privateRoomIncluded": true,
+        "daysTypical": {
+          "vaginal": 3,
+          "caesarean": 4
+        },
+        "excessApplicable": true,
+        "excessNote": "Hospital excess applies once per calendar year (e.g., $250–$750 depending on policy)"
+      },
+      "anaesthetist": {
+        "outOfPocket": {
+          "min": 0,
+          "max": 800,
+          "typical": 200,
+          "description": "Some anaesthetists bulk bill or have no-gap arrangements; others charge significant gaps"
+        }
+      },
+      "totalOutOfPocket": {
+        "min": 500,
+        "max": 5000,
+        "typical": 2500,
+        "description": "Total typical out-of-pocket after Medicare + insurance benefits. Obstetrician gap is the largest variable."
+      }
+    },
+
+    "benefits": [
+      "Choice of obstetrician (continuity of care throughout pregnancy)",
+      "Private room for mother and partner during labour and recovery",
+      "Private room post-birth — partner can stay overnight",
+      "Access to private hospital amenities",
+      "Typically longer post-birth stay",
+      "Choice of hospital",
+      "Scheduled caesarean timing flexibility"
+    ],
+
+    "considerations": [
+      "Obstetrician gap fees can be substantial and are hard to predict",
+      "Gold cover required — most expensive tier",
+      "Must have cover 12 months before expected birth",
+      "Private obstetrician fees vary significantly — shop around"
+    ],
+
+    "cSectionRate": {
+      "private": 0.42,
+      "public": 0.38,
+      "description": "C-section rates are higher in private hospitals (42% vs 38%). Some is driven by patient choice for scheduling; some reflects different care models."
+    }
+  },
+
+  "public": {
+    "label": "Public Hospital",
+    "cost": "Free for Medicare-eligible patients",
+    "outOfPocket": 0,
+
+    "careModel": "Shared care model — typically seen by a rotating team of midwives and obstetric registrars. Less continuity than a private obstetrician but clinically equivalent outcomes for most births.",
+
+    "benefits": [
+      "No out-of-pocket cost",
+      "High quality clinical care — public hospitals handle all high-risk pregnancies",
+      "Experienced obstetric teams",
+      "Access to specialist care if complications arise",
+      "No insurance required"
+    ],
+
+    "considerations": [
+      "Shared care — may not see the same midwife or doctor at each appointment",
+      "Shared ward post-birth (semi-private or public rooms in most hospitals)",
+      "Partner accommodation is limited — often cannot stay overnight",
+      "Limited control over timing of birth unless medically indicated"
+    ],
+
+    "birthingCentres": {
+      "available": true,
+      "description": "Many public hospitals offer midwife-led birthing centre programs for low-risk pregnancies — continuity of midwife care with a more home-like environment"
+    }
+  },
+
+  "comparison": {
+    "clinicalOutcomes": "Clinical outcomes for uncomplicated births are similar between public and private hospitals. Private provides a more personalised experience and greater choice, not necessarily better clinical outcomes.",
+    "keyDecisionFactors": [
+      "Continuity of care — important to many parents",
+      "Partner accommodation and visiting hours",
+      "Room type (private vs shared)",
+      "Cost — $0 public vs typically $1,500–$5,000+ private out-of-pocket",
+      "Ability to plan timing (more flexibility in private for elective procedures)"
+    ],
+    "recommendation": "Gold cover is the most expensive PHI tier. Upgrading to Gold solely for maternity benefits is often not financially rational for one birth — calculate whether Gold premium cost + out-of-pocket exceeds public cost (typically $0). For those who value continuity of care and private room, the non-financial benefits may justify the cost."
+  }
+}
