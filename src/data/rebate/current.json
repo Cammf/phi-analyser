@@ -1,0 +1,133 @@
+{
+  "_comment": "Private Health Insurance Rebate — FY 2025-26 income thresholds and rebate percentages",
+  "_source": "https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/private-health-insurance-rebate/income-thresholds-and-rates-for-the-private-health-insurance-rebate",
+  "_verified": true,
+  "_lastVerified": "2026-02-23",
+  "_note": "Rebate percentages are indexed on 1 April each year. FY 2025-26 has TWO rebate periods: 1 Jul 2025 – 31 Mar 2026, and 1 Apr 2026 – 30 Jun 2026. The income thresholds are the same for both periods (set on 1 July). For the calculator's default display, use Period 1 rates (9 of 12 months).",
+
+  "financialYear": "2025-26",
+  "source": "Australian Taxation Office (ato.gov.au)",
+  "sourceUrl": "https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/private-health-insurance-rebate/income-thresholds-and-rates-for-the-private-health-insurance-rebate",
+
+  "incomeThresholds": {
+    "_comment": "Same thresholds as MLS — set on 1 July each financial year",
+    "single": [
+      { "tier": "base", "label": "Base tier", "incomeMin": 0, "incomeMax": 101000 },
+      { "tier": "1", "label": "Tier 1", "incomeMin": 101001, "incomeMax": 118000 },
+      { "tier": "2", "label": "Tier 2", "incomeMin": 118001, "incomeMax": 158000 },
+      { "tier": "3", "label": "Tier 3", "incomeMin": 158001, "incomeMax": null }
+    ],
+    "family": [
+      { "tier": "base", "label": "Base tier", "incomeMin": 0, "incomeMax": 202000 },
+      { "tier": "1", "label": "Tier 1", "incomeMin": 202001, "incomeMax": 236000 },
+      { "tier": "2", "label": "Tier 2", "incomeMin": 236001, "incomeMax": 316000 },
+      { "tier": "3", "label": "Tier 3", "incomeMin": 316001, "incomeMax": null }
+    ],
+    "dependentChildIncrement": 1500,
+    "incrementAppliesAfterChild": 1
+  },
+
+  "rebatePeriods": [
+    {
+      "periodLabel": "1 July 2025 – 31 March 2026",
+      "effectiveDate": "2025-07-01",
+      "expiryDate": "2026-03-31",
+      "isPrimaryPeriod": true,
+      "durationMonths": 9,
+      "tiers": {
+        "base": {
+          "under65": 24.288,
+          "age65to69": 28.337,
+          "age70plus": 32.385
+        },
+        "1": {
+          "under65": 16.192,
+          "age65to69": 20.240,
+          "age70plus": 24.288
+        },
+        "2": {
+          "under65": 8.095,
+          "age65to69": 12.143,
+          "age70plus": 16.192
+        },
+        "3": {
+          "under65": 0,
+          "age65to69": 0,
+          "age70plus": 0
+        }
+      }
+    },
+    {
+      "periodLabel": "1 April 2026 – 30 June 2026",
+      "effectiveDate": "2026-04-01",
+      "expiryDate": "2026-06-30",
+      "isPrimaryPeriod": false,
+      "durationMonths": 3,
+      "tiers": {
+        "base": {
+          "under65": 24.118,
+          "age65to69": 28.139,
+          "age70plus": 32.158
+        },
+        "1": {
+          "under65": 16.079,
+          "age65to69": 20.098,
+          "age70plus": 24.118
+        },
+        "2": {
+          "under65": 8.038,
+          "age65to69": 12.058,
+          "age70plus": 16.079
+        },
+        "3": {
+          "under65": 0,
+          "age65to69": 0,
+          "age70plus": 0
+        }
+      }
+    }
+  ],
+
+  "ageGroupDefinitions": {
+    "under65": {
+      "label": "Under 65",
+      "description": "Aged under 65 on 1 July of the financial year",
+      "minAge": 0,
+      "maxAge": 64
+    },
+    "age65to69": {
+      "label": "65 to 69",
+      "description": "Aged 65 to 69 on 1 July of the financial year",
+      "minAge": 65,
+      "maxAge": 69
+    },
+    "age70plus": {
+      "label": "70 or over",
+      "description": "Aged 70 or over on 1 July of the financial year",
+      "minAge": 70,
+      "maxAge": null
+    }
+  },
+
+  "rebateRules": {
+    "claimMethod": "You can claim the rebate as a premium reduction through your insurer (most common) or as a tax offset when you lodge your tax return",
+    "coupleAgeRule": "If you are a couple and one of you is aged 65 or older, the rebate for both of you is based on the older person's age bracket",
+    "incomeDefinition": "Same as MLS income — taxable income + reportable fringe benefits + total net investment losses + reportable super contributions (+ trust/foreign income if applicable)",
+    "updateCycle": "Rebate percentages are indexed on 1 April each year. Income thresholds are indexed on 1 July each year. This means within a single financial year, two different rebate percentage sets may apply.",
+    "tier3Note": "Tier 3 income earners receive 0% rebate regardless of age. They pay the full premium with no government contribution."
+  },
+
+  "previousYear": {
+    "financialYear": "2024-25",
+    "singleBaseThreshold": 97000,
+    "familyBaseThreshold": 194000,
+    "rebatePeriod1": {
+      "periodLabel": "1 July 2024 – 31 March 2025",
+      "baseTierUnder65": 24.608
+    },
+    "rebatePeriod2": {
+      "periodLabel": "1 April 2025 – 30 June 2025",
+      "baseTierUnder65": 24.118
+    }
+  }
+}
