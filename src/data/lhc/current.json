@@ -1,0 +1,129 @@
+{
+  "_comment": "Lifetime Health Cover (LHC) loading rules and Age-Based Discount (youth discount)",
+  "_sources": [
+    "https://www.privatehealth.gov.au/health_insurance/surcharges_incentives/lifetime_health_cover.htm",
+    "https://www.privatehealth.gov.au/health_insurance/surcharges_incentives/discount_age.htm"
+  ],
+  "_verified": true,
+  "_lastVerified": "2026-02-23",
+
+  "source": "Private Health Insurance Ombudsman (privatehealth.gov.au)",
+
+  "lhcLoading": {
+    "description": "Lifetime Health Cover loading is a government initiative that encourages Australians to take out and maintain private hospital cover earlier in life. If you don't take out hospital cover by the deadline, you pay a loading on top of your hospital premium.",
+
+    "baseAge": 31,
+    "baseAgeRule": "LHC loading applies if you don't take out hospital cover by 1 July following your 31st birthday",
+    "baseDayDefinition": "The later of: (1) 1 July 2000, or (2) 1 July following your 31st birthday",
+
+    "ratePerYear": 0.02,
+    "ratePerYearDescription": "2% loading on your hospital premium for every year you are aged over 30 without hospital cover",
+
+    "maxLoading": 0.70,
+    "maxLoadingDescription": "Maximum LHC loading is capped at 70% (reached at age 65 if never held cover)",
+
+    "removalAfterYears": 10,
+    "removalRule": "LHC loading is removed after 10 continuous years of hospital cover",
+
+    "gracePeriodDays": 1094,
+    "gracePeriodDescription": "You can have up to 1,094 days (approximately 3 years minus 1 day) without hospital cover during your lifetime without your loading increasing. Days are cumulative across your lifetime, not per gap.",
+
+    "loadingFormula": {
+      "description": "loading = min(maxLoading, ratePerYear × yearsOverBaseAge)",
+      "example1": {
+        "scenario": "Age 35, never had cover",
+        "calculation": "min(0.70, 0.02 × (35 - 30)) = min(0.70, 0.10) = 10%",
+        "result": 0.10
+      },
+      "example2": {
+        "scenario": "Age 45, never had cover",
+        "calculation": "min(0.70, 0.02 × (45 - 30)) = min(0.70, 0.30) = 30%",
+        "result": 0.30
+      },
+      "example3": {
+        "scenario": "Age 65, never had cover (maximum loading)",
+        "calculation": "min(0.70, 0.02 × (65 - 30)) = min(0.70, 0.70) = 70%",
+        "result": 0.70
+      }
+    },
+
+    "appliesTo": "Hospital cover premiums only (not extras/general treatment cover)",
+    "loadingAppliedBefore": "Loading is applied to the base hospital premium before the government rebate is calculated",
+
+    "specialRules": {
+      "newMigrants": {
+        "description": "For new migrants to Australia, the LHC base day is the later of: (1) 1 July following their 31st birthday, or (2) the first anniversary of their full Medicare registration",
+        "note": "Those over 31 on 1 July 2000 while overseas are considered to have had continuous cover"
+      },
+      "overseasResidents": {
+        "description": "Time spent continuously overseas does not count toward the 1,094 day grace period. You must return to Australia and take out cover within 12 months of registering for Medicare to avoid loading.",
+        "consecutiveDaysPerVisit": 90,
+        "consecutiveDaysNote": "Overseas visitors can spend up to 90 consecutive days per visit in Australia without being counted as returned"
+      },
+      "suspendedCover": {
+        "description": "If you suspend your hospital cover (e.g., while travelling overseas), those days count toward your 1,094 day grace period"
+      }
+    }
+  },
+
+  "youthDiscount": {
+    "description": "The Age-Based Discount (commonly called 'youth discount') encourages younger Australians to take out private hospital cover. Introduced 1 April 2019.",
+    "effectiveDate": "2019-04-01",
+    "source": "https://www.privatehealth.gov.au/health_insurance/surcharges_incentives/discount_age.htm",
+
+    "discountRatePerYearUnder30": 0.02,
+    "maxDiscount": 0.10,
+    "maxDiscountAges": "18 to 25",
+
+    "discountByAge": [
+      { "ageMin": 18, "ageMax": 25, "discount": 0.10 },
+      { "ageMin": 26, "ageMax": 26, "discount": 0.08 },
+      { "ageMin": 27, "ageMax": 27, "discount": 0.06 },
+      { "ageMin": 28, "ageMax": 28, "discount": 0.04 },
+      { "ageMin": 29, "ageMax": 29, "discount": 0.02 },
+      { "ageMin": 30, "ageMax": null, "discount": 0.00 }
+    ],
+
+    "discountFormula": "discount = max(0, min(0.10, 0.02 × (30 - age)))",
+
+    "retentionRule": {
+      "description": "If you maintain continuous hospital cover, the discount you received when you took out cover continues to apply until you turn 41",
+      "freezeUntilAge": 41
+    },
+
+    "phaseOut": {
+      "startsAtAge": 41,
+      "reductionPerYear": 0.02,
+      "description": "From age 41, the discount is reduced by 2% per year until it reaches 0%",
+      "example": {
+        "scenario": "Person took out cover at age 24 (10% discount), now turning 41",
+        "phaseOut": [
+          { "age": 41, "discount": 0.08 },
+          { "age": 42, "discount": 0.06 },
+          { "age": 43, "discount": 0.04 },
+          { "age": 44, "discount": 0.02 },
+          { "age": 45, "discount": 0.00 }
+        ]
+      }
+    },
+
+    "appliesTo": "Hospital cover premiums only (not extras/general treatment). Discount is calculated on the base premium before government rebate, LHC loading, and any other eligible discounts.",
+
+    "coupleAndFamilyRules": {
+      "description": "On couple or family policies, the discount is the average of the two adults' individual discounts",
+      "example": {
+        "adult1Age": 27,
+        "adult1Discount": 0.06,
+        "adult2Age": 29,
+        "adult2Discount": 0.02,
+        "combinedDiscount": 0.04
+      },
+      "dependentExclusion": "Dependants on family or single-parent policies are not eligible for the youth discount — they must hold their own independent policy to qualify"
+    },
+
+    "insurerDiscretion": {
+      "isMandatory": false,
+      "description": "The age-based discount is optional — not all health insurers offer it. Insurers also decide individually whether to honour existing discounts when customers switch funds."
+    }
+  }
+}
