@@ -1,0 +1,183 @@
+{
+  "_comment": "Medicare Levy Surcharge (MLS) — FY 2025-26 thresholds and rates",
+  "_source": "https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/medicare-levy-surcharge/medicare-levy-surcharge-income-thresholds-and-rates",
+  "_verified": true,
+  "_lastVerified": "2026-02-23",
+
+  "financialYear": "2025-26",
+  "effectiveDate": "2025-07-01",
+  "expiryDate": "2026-06-30",
+  "nextUpdateDate": "2026-07-01",
+  "source": "Australian Taxation Office (ato.gov.au)",
+  "sourceUrl": "https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/medicare-levy-surcharge/medicare-levy-surcharge-income-thresholds-and-rates",
+
+  "singleThresholds": [
+    {
+      "tier": "base",
+      "label": "Base tier",
+      "incomeMin": 0,
+      "incomeMax": 101000,
+      "mlsRate": 0,
+      "description": "No MLS payable"
+    },
+    {
+      "tier": "1",
+      "label": "Tier 1",
+      "incomeMin": 101001,
+      "incomeMax": 118000,
+      "mlsRate": 0.01,
+      "description": "1% of taxable income for MLS purposes"
+    },
+    {
+      "tier": "2",
+      "label": "Tier 2",
+      "incomeMin": 118001,
+      "incomeMax": 158000,
+      "mlsRate": 0.0125,
+      "description": "1.25% of taxable income for MLS purposes"
+    },
+    {
+      "tier": "3",
+      "label": "Tier 3",
+      "incomeMin": 158001,
+      "incomeMax": null,
+      "mlsRate": 0.015,
+      "description": "1.5% of taxable income for MLS purposes"
+    }
+  ],
+
+  "familyThresholds": [
+    {
+      "tier": "base",
+      "label": "Base tier",
+      "incomeMin": 0,
+      "incomeMax": 202000,
+      "mlsRate": 0,
+      "description": "No MLS payable"
+    },
+    {
+      "tier": "1",
+      "label": "Tier 1",
+      "incomeMin": 202001,
+      "incomeMax": 236000,
+      "mlsRate": 0.01,
+      "description": "1% of taxable income for MLS purposes"
+    },
+    {
+      "tier": "2",
+      "label": "Tier 2",
+      "incomeMin": 236001,
+      "incomeMax": 316000,
+      "mlsRate": 0.0125,
+      "description": "1.25% of taxable income for MLS purposes"
+    },
+    {
+      "tier": "3",
+      "label": "Tier 3",
+      "incomeMin": 316001,
+      "incomeMax": null,
+      "mlsRate": 0.015,
+      "description": "1.5% of taxable income for MLS purposes"
+    }
+  ],
+
+  "familyThresholdRules": {
+    "familyBaseIsDoubleSingle": true,
+    "dependentChildIncrement": 1500,
+    "incrementAppliesAfterChild": 1,
+    "description": "Family income threshold is increased by $1,500 for each MLS dependent child after the first child"
+  },
+
+  "incomeDefinition": {
+    "description": "Income for MLS purposes is the sum of the following components",
+    "components": [
+      {
+        "name": "Taxable income",
+        "description": "Your taxable income (including net family trust distribution tax amounts; excluding FHSS scheme releases)"
+      },
+      {
+        "name": "Reportable fringe benefits",
+        "description": "Total reportable fringe benefits amounts (from your employer)"
+      },
+      {
+        "name": "Total net investment losses",
+        "description": "Financial investment losses plus rental property losses (negative gearing)"
+      },
+      {
+        "name": "Reportable super contributions",
+        "description": "Employer contributions plus deductible personal super contributions exceeding the standard amount"
+      },
+      {
+        "name": "Spouse's trust net income",
+        "description": "Net income of a trust attributable to your spouse (under section 98 of the Income Tax Assessment Act 1936). Less common component."
+      },
+      {
+        "name": "Exempt foreign employment income",
+        "description": "Exempt foreign employment income (applies only if taxable income is $1 or more). Less common component."
+      }
+    ],
+    "note": "Most people only need to consider the first 4 components. Components 5 and 6 apply in less common circumstances."
+  },
+
+  "appropriateCover": {
+    "description": "To avoid MLS, you must hold 'appropriate level of private patient hospital cover'",
+    "requirements": [
+      "Must be private patient hospital cover (not extras/general cover only)",
+      "Must be from a registered Australian health insurer",
+      "Must cover hospital treatment in Australia",
+      "Must cover yourself, your spouse, and all your dependants"
+    ],
+    "excessLimits": {
+      "single": 750,
+      "coupleOrFamily": 1500,
+      "description": "Policy excess must not exceed $750 for singles or $1,500 for couples/families"
+    },
+    "doesNotCount": [
+      "General (extras) cover only — dental, optical, physio, etc.",
+      "Travel insurance",
+      "Cover from an overseas health fund"
+    ]
+  },
+
+  "calculationRules": {
+    "mlsAppliedTo": "Income for MLS purposes (not just taxable income)",
+    "assessmentPeriod": "Annual (1 July to 30 June), pro-rated by number of days without appropriate cover",
+    "proRataRule": "If you had cover for part of the year, MLS is calculated on the number of days you did NOT have appropriate cover",
+    "lowIncomeSpouseRule": {
+      "threshold": 27222,
+      "description": "If you had a spouse for the full year and your own income for MLS purposes was $27,222 or less, you do not pay MLS even if family income exceeds the threshold (FY 2024-25 figure — FY 2025-26 figure to be confirmed)"
+    }
+  },
+
+  "workedExamples": [
+    {
+      "name": "Tom — Single, Tier 1 (ATO official example, FY 2025-26)",
+      "inputs": {
+        "taxableIncome": 90000,
+        "reportableFringeBenefits": 27000,
+        "netInvestmentLosses": 0,
+        "reportableSuperContributions": 0,
+        "familyType": "single",
+        "hasAppropriateCover": false
+      },
+      "calculation": {
+        "mlsIncome": 117000,
+        "tier": "1",
+        "mlsRate": 0.01,
+        "annualMLS": 1170
+      },
+      "source": "ATO website example — https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/medicare-levy-surcharge/medicare-levy-surcharge-income-thresholds-and-rates"
+    }
+  ],
+
+  "previousYear": {
+    "financialYear": "2024-25",
+    "singleBaseThreshold": 97000,
+    "familyBaseThreshold": 194000,
+    "singleTier1Max": 113000,
+    "singleTier2Max": 151000,
+    "familyTier1Max": 226000,
+    "familyTier2Max": 302000,
+    "note": "Thresholds increased for 2025-26. The same $117,000 income was Tier 2 (1.25%) in 2024-25 but Tier 1 (1%) in 2025-26."
+  }
+}
