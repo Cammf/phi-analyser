@@ -30,7 +30,7 @@ export default function SiteFooter() {
             <ul className="space-y-2">
               {[
                 { href: '/private-health-insurance-calculator', label: 'PHI Calculator' },
-                { href: '/medicare-levy-surcharge-calculator', label: 'MLS Calculator' },
+                { href: '/mls-calculator', label: 'MLS Calculator' },
                 { href: '/lhc-loading-calculator', label: 'LHC Calculator' },
               ].map((link) => (
                 <li key={link.href}>

@@ -16,7 +16,7 @@ const calculatorLinks = [
     description: 'Is private health insurance worth it for your situation?',
   },
   {
-    href: '/medicare-levy-surcharge-calculator',
+    href: '/mls-calculator',
     label: 'MLS Calculator',
     description: 'Calculate your Medicare Levy Surcharge exposure',
   },
