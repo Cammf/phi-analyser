@@ -839,7 +839,11 @@ export default function ResultsClient() {
       {/* ── Edit answers link ── */}
       <div className="text-center pt-4 border-t border-border">
         <button
-          onClick={() => router.push('/should-i-get-private-health-insurance')}
+          onClick={() => {
+            const restoreUrl =
+              `/should-i-get-private-health-insurance?restore=1&${searchParams.toString()}`;
+            router.push(restoreUrl);
+          }}
           className="text-sm text-primary hover:underline"
         >
           ← Edit your answers
