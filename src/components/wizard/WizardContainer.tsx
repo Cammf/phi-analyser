@@ -6,6 +6,7 @@ import Step1AboutYou from '@/components/wizard/steps/Step1AboutYou';
 import Step2Income from '@/components/wizard/steps/Step2Income';
 import Step3InsuranceStatus from '@/components/wizard/steps/Step3InsuranceStatus';
 import Step4HealthNeeds from '@/components/wizard/steps/Step4HealthNeeds';
+import Step5Review from '@/components/wizard/steps/Step5Review';
 
 export default function WizardContainer() {
   const { state } = useWizard();
@@ -16,7 +17,7 @@ export default function WizardContainer() {
       case 2: return <Step2Income />;
       case 3: return <Step3InsuranceStatus />;
       case 4: return <Step4HealthNeeds />;
-      // case 5: return <Step5Review />; — added in a later task
+      case 5: return <Step5Review />;
       default: return <Step1AboutYou />;
     }
   }
