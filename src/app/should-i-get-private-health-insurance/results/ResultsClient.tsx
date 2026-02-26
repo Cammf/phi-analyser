@@ -583,6 +583,153 @@ function KeyInsightsAccordion({ output }: { output: CalculationOutput }) {
   );
 }
 
+// ─── Next Steps ───────────────────────────────────────────────────────────────
+
+function NextStepsPanel({ output }: { output: CalculationOutput }) {
+  const { scenarioResult } = output;
+  const insuranceRecommended = scenarioResult.recommendedScenario !== 'no-insurance';
+
+  const steps = [
+    insuranceRecommended
+      ? {
+          n: 1,
+          title: 'Compare real policies on PrivateHealth.gov.au',
+          body: "The government's comparison site shows all registered policies. Filter by tier and state. Avoid comparison sites that earn commissions — they may not show all options.",
+        }
+      : {
+          n: 1,
+          title: 'Review your decision annually',
+          body: 'Your income, health needs, and premiums change over time. Set a calendar reminder each April (when annual premium increases take effect) to reassess.',
+        },
+    {
+      n: 2,
+      title: 'Check your exact MLS income',
+      body: 'Your MLS income includes taxable income + reportable fringe benefits + net investment losses + reportable super contributions. Check your most recent Notice of Assessment for the accurate figure.',
+    },
+    {
+      n: 3,
+      title: 'Factor in waiting periods',
+      body: "New hospital policies have a 12-month waiting period for pre-existing conditions and obstetrics. If you're planning a procedure, take out cover well in advance.",
+    },
+    {
+      n: 4,
+      title: 'Consider your excess options',
+      body: "A higher excess ($500–$750) reduces your annual premium significantly. If you're in good health and unlikely to be admitted, a high excess is often the right choice.",
+    },
+    {
+      n: 5,
+      title: 'Ask about no-gap arrangements',
+      body: 'Before any elective procedure, ask your specialist: "Do you have a no-gap agreement with [your insurer]?" This can save you hundreds of dollars in gap fees.',
+    },
+    {
+      n: 6,
+      title: 'Set an April reminder',
+      body: "Private health premiums increase each April. Review your policy annually — it's easy to switch insurers and keep your waiting periods.",
+    },
+  ];
+
+  return (
+    <section aria-labelledby="next-steps-heading" className="card">
+      <h2 id="next-steps-heading" className="text-xl font-bold mb-4">
+        Next Steps
+      </h2>
+      <ol className="space-y-4">
+        {steps.map(({ n, title, body }) => (
+          <li key={n} className="flex gap-4">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center">
+              {n}
+            </span>
+            <div>
+              <p className="font-semibold text-sm">{title}</p>
+              <p className="text-sm text-muted mt-0.5">{body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      {/* Disclaimer */}
+      <div className="mt-6 p-3 rounded-lg bg-background border border-border text-xs text-muted">
+        <strong>Disclaimer:</strong> This calculator provides general information only. It is
+        not financial or tax advice. Tax laws change annually — verify current thresholds with
+        the{' '}
+        <a
+          href="https://www.ato.gov.au"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline"
+        >
+          ATO
+        </a>{' '}
+        and{' '}
+        <a
+          href="https://www.privatehealth.gov.au"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline"
+        >
+          Services Australia
+        </a>
+        .
+      </div>
+    </section>
+  );
+}
+
+// ─── Share Panel ──────────────────────────────────────────────────────────────
+
+function SharePanel() {
+  function copyLink() {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href).catch(() => {});
+    }
+  }
+
+  function emailResults() {
+    if (typeof window !== 'undefined') {
+      const subject = encodeURIComponent('My private health insurance analysis');
+      const body = encodeURIComponent(
+        `I used the Private Health Insurance Calculator to analyse my situation.\n\nSee my results: ${window.location.href}`,
+      );
+      window.open(`mailto:?subject=${subject}&body=${body}`);
+    }
+  }
+
+  function printResults() {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  }
+
+  return (
+    <section className="card print:hidden">
+      <h2 className="text-lg font-bold mb-3">Share or save your results</h2>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={copyLink}
+          className="btn-secondary text-sm"
+        >
+          Copy link
+        </button>
+        <button
+          type="button"
+          onClick={emailResults}
+          className="btn-secondary text-sm"
+        >
+          Email results
+        </button>
+        <button
+          type="button"
+          onClick={printResults}
+          className="btn-secondary text-sm"
+        >
+          Print / Save PDF
+        </button>
+      </div>
+    </section>
+  );
+}
+
 // ─── Main results client ─────────────────────────────────────────────────────
 
 export default function ResultsClient() {
@@ -682,6 +829,12 @@ export default function ResultsClient() {
 
       {/* ── Key Insights ── */}
       <KeyInsightsAccordion output={output} />
+
+      {/* ── Next Steps ── */}
+      <NextStepsPanel output={output} />
+
+      {/* ── Share ── */}
+      <SharePanel />
 
       {/* ── Edit answers link ── */}
       <div className="text-center pt-4 border-t border-border">
