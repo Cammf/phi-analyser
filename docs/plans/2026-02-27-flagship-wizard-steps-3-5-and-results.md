@@ -1,0 +1,1851 @@
+# Flagship Wizard Steps 3–5 + Full Results Page Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Complete the flagship "Should I Get Private Health Insurance?" wizard (Steps 3–5 + wire all steps) and build the full results page with scenario cards, interpretation, projections, ambulance alert, insights accordion, next steps, sharing, and edit-answers restore flow.
+
+**Architecture:** Steps 3–4 exist but are unwired. This plan wires them, adds Step 5 (Review), a `runCalculations.ts` orchestrator, a `wizardParams.ts` URL codec, and a results page at `/should-i-get-private-health-insurance/results`. The results page is a server component wrapping a client `ResultsClient` (using `useSearchParams`). The restore flow lets users navigate back from results to the wizard with all state pre-filled.
+
+**Tech Stack:** Next.js 14 / TypeScript / Tailwind CSS / React Context + useReducer / pure function calculation pipeline
+
+---
+
+### Task 1: Wire Steps 3–4 into WizardContainer
+
+**Files:**
+- Modify: `src/components/wizard/WizardContainer.tsx`
+
+**Step 1: Replace the file with the updated version**
+
+```tsx
+'use client';
+
+import { useWizard } from '@/components/wizard/WizardContext';
+import WizardProgress from '@/components/wizard/WizardProgress';
+import Step1AboutYou from '@/components/wizard/steps/Step1AboutYou';
+import Step2Income from '@/components/wizard/steps/Step2Income';
+import Step3InsuranceStatus from '@/components/wizard/steps/Step3InsuranceStatus';
+import Step4HealthNeeds from '@/components/wizard/steps/Step4HealthNeeds';
+
+export default function WizardContainer() {
+  const { state } = useWizard();
+
+  function renderStep() {
+    switch (state.currentStep) {
+      case 1: return <Step1AboutYou />;
+      case 2: return <Step2Income />;
+      case 3: return <Step3InsuranceStatus />;
+      case 4: return <Step4HealthNeeds />;
+      // case 5: return <Step5Review />; — added in Task 4
+      default: return <Step1AboutYou />;
+    }
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="text-center mb-8 sm:mb-10">
+        <h1 className="mb-3">Should I Get Private Health Insurance?</h1>
+        <p className="text-muted max-w-2xl mx-auto">
+          Answer a few questions and we&apos;ll compare the real cost of insurance vs going
+          without — based on your income, age, and situation.
+        </p>
+      </div>
+      <WizardProgress currentStep={state.currentStep} />
+      {renderStep()}
+    </div>
+  );
+}
+```
+
+**Step 2: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: Clean — no errors.
+
+**Step 3: Commit**
+
+```bash
+git add src/components/wizard/WizardContainer.tsx
+git commit -m "feat: wire Steps 3-4 into WizardContainer"
+```
+
+---
+
+### Task 2: Build wizardParams.ts (URL encode / decode)
+
+**Files:**
+- Create: `src/lib/wizardParams.ts`
+
+**Step 1: Create the file**
+
+```typescript
+// =============================================================================
+// WIZARD URL PARAMS — encode WizardInputs to/from URLSearchParams
+// Used by Step5Review (encode) and ResultsClient + wizard restore (decode)
+// =============================================================================
+
+import type {
+  WizardInputs,
+  IncomeRange,
+  FamilyType,
+  State,
+  CoverStatus,
+  HospitalTier,
+  ExtrasTier,
+  ProcedureType,
+} from '@/lib/types';
+
+/**
+ * Encodes all WizardInputs fields as short URL param keys.
+ * The resulting string is appended to the results URL.
+ */
+export function buildWizardParams(inputs: WizardInputs): URLSearchParams {
+  const p = new URLSearchParams();
+  p.set('age',    String(inputs.age));
+  p.set('fam',    inputs.familyType);
+  p.set('ch',     String(inputs.dependentChildren));
+  p.set('st',     inputs.state);
+  p.set('range',  inputs.incomeRange);
+  if (inputs.exactIncome !== null) p.set('income', String(inputs.exactIncome));
+  p.set('cover',  inputs.coverStatus);
+  p.set('tier',   inputs.currentTier);
+  if (inputs.currentPremiumPerMonth !== null) p.set('pm', String(inputs.currentPremiumPerMonth));
+  p.set('xonly',  inputs.extrasOnly ? '1' : '0');
+  p.set('yrs',    String(inputs.yearsHeld));
+  if (inputs.yearDropped !== null) p.set('ydrop', String(inputs.yearDropped));
+  p.set('needs',  inputs.includeHealthNeeds ? '1' : '0');
+  p.set('dental', String(inputs.dentalVisitsPerYear));
+  p.set('optical',String(inputs.opticalClaimsPerYear));
+  p.set('physio', String(inputs.physioSessionsPerYear));
+  if (inputs.plannedProcedures.length > 0) {
+    p.set('procs', inputs.plannedProcedures.join(','));
+  }
+  p.set('extras', inputs.extrasDesired);
+  return p;
+}
+
+/**
+ * Decodes URLSearchParams back to WizardInputs.
+ * Returns null if required params are missing (age, family type).
+ */
+export function parseWizardParams(p: URLSearchParams): WizardInputs | null {
+  const ageStr    = p.get('age');
+  const familyStr = p.get('fam');
+  if (!ageStr || !familyStr) return null;
+
+  const age = parseInt(ageStr, 10);
+  if (isNaN(age) || age < 1) return null;
+
+  const incomeStr = p.get('income');
+  const pmStr     = p.get('pm');
+  const ydropStr  = p.get('ydrop');
+  const procsStr  = p.get('procs');
+
+  return {
+    age,
+    familyType:             familyStr as FamilyType,
+    dependentChildren:      parseInt(p.get('ch')     ?? '0', 10),
+    state:                  (p.get('st')              ?? 'NSW') as State,
+    incomeRange:            (p.get('range')           ?? 'under-90k') as IncomeRange,
+    exactIncome:            incomeStr ? parseInt(incomeStr, 10) : null,
+    coverStatus:            (p.get('cover')           ?? 'never') as CoverStatus,
+    currentTier:            (p.get('tier')            ?? 'none') as HospitalTier,
+    currentPremiumPerMonth: pmStr ? parseInt(pmStr, 10) : null,
+    extrasOnly:             p.get('xonly') === '1',
+    yearsHeld:              parseInt(p.get('yrs')     ?? '0', 10),
+    yearDropped:            ydropStr ? parseInt(ydropStr, 10) : null,
+    includeHealthNeeds:     p.get('needs') === '1',
+    dentalVisitsPerYear:    parseInt(p.get('dental')  ?? '0', 10),
+    opticalClaimsPerYear:   parseInt(p.get('optical') ?? '0', 10),
+    physioSessionsPerYear:  parseInt(p.get('physio')  ?? '0', 10),
+    plannedProcedures:      procsStr
+      ? (procsStr.split(',').filter(Boolean) as ProcedureType[])
+      : [],
+    extrasDesired:          (p.get('extras')          ?? 'none') as ExtrasTier,
+  };
+}
+```
+
+**Step 2: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: Clean.
+
+**Step 3: Commit**
+
+```bash
+git add src/lib/wizardParams.ts
+git commit -m "feat: add wizardParams encode/decode for results URL"
+```
+
+---
+
+### Task 3: Build runCalculations.ts orchestrator
+
+**Files:**
+- Create: `src/lib/runCalculations.ts`
+
+**Step 1: Create the orchestrator**
+
+```typescript
+// =============================================================================
+// RUN CALCULATIONS — Flagship wizard orchestrator
+// Calls the full pipeline: resolveInputs → MLS → rebate → LHC →
+//   scenario comparison → projection → extras (optional)
+// =============================================================================
+
+import type {
+  WizardInputs,
+  CalculationOutput,
+  ExtrasResult,
+  ExtrasCalculationBreakdown,
+  WaitTimeResult,
+} from '@/lib/types';
+import {
+  resolveInputs,
+  HOSPITAL_PREMIUMS_SINGLE,
+  FAMILY_PREMIUM_MULTIPLIERS,
+} from '@/lib/resolveInputs';
+import { calculateMLS } from '@/lib/mlsCalculations';
+import { calculateRebate } from '@/lib/rebateCalculations';
+import { calculateLHCLoading } from '@/lib/lhcCalculations';
+import { calculateScenarioComparison } from '@/lib/scenarioCalculations';
+import { calculateProjectionFromScenario } from '@/lib/projectionCalculations';
+
+// ─── Extras calculation constants ───────────────────────────────────────────
+// Source: APRA / PHIO data (approximate average benefit per service visit)
+const DENTAL_BENEFIT_PER_VISIT    = 180;  // typical check-up + clean benefit
+const OPTICAL_BENEFIT_PER_CLAIM   = 220;  // typical frames/lenses benefit
+const PHYSIO_BENEFIT_PER_SESSION  = 45;   // typical single physio session benefit
+
+// Annual extras premiums per single adult (matches premiums/current.json)
+const EXTRAS_PREMIUMS_SINGLE: Record<string, number> = {
+  none:          0,
+  basic:       540,
+  mid:         900,
+  comprehensive: 1380,
+};
+
+// Extras family multipliers (based on industry averages)
+const EXTRAS_FAMILY_MULTIPLIERS: Record<string, number> = {
+  single:          1.0,
+  couple:          1.8,
+  family:          1.8,
+  'single-parent': 1.5,
+};
+
+// ─── Extras value calculation ────────────────────────────────────────────────
+
+function calculateExtrasValue(inputs: WizardInputs): ExtrasResult {
+  const premiumSingle = EXTRAS_PREMIUMS_SINGLE[inputs.extrasDesired] ?? 0;
+  const multiplier    = EXTRAS_FAMILY_MULTIPLIERS[inputs.familyType]  ?? 1.0;
+  const annualPremium = Math.round(premiumSingle * multiplier);
+
+  const estimatedAnnualBenefit = Math.round(
+    inputs.dentalVisitsPerYear   * DENTAL_BENEFIT_PER_VISIT  +
+    inputs.opticalClaimsPerYear  * OPTICAL_BENEFIT_PER_CLAIM +
+    inputs.physioSessionsPerYear * PHYSIO_BENEFIT_PER_SESSION,
+  );
+
+  const netAnnualCost  = annualPremium - estimatedAnnualBenefit;
+  const benefitRatio   = annualPremium > 0 ? estimatedAnnualBenefit / annualPremium : 0;
+  const isFinanciallyRational = netAnnualCost <= 0;
+
+  let recommendation: string;
+  if (annualPremium === 0) {
+    recommendation = 'No extras cover selected.';
+  } else if (isFinanciallyRational) {
+    recommendation =
+      `Based on your usage, ${inputs.extrasDesired} extras cover is likely worthwhile — ` +
+      `you'd claim back approximately $${estimatedAnnualBenefit.toLocaleString()} on a ` +
+      `$${annualPremium.toLocaleString()} premium.`;
+  } else {
+    recommendation =
+      `Based on your usage, you'd pay $${netAnnualCost.toLocaleString()} more per year ` +
+      `than you'd claim back. Extras cover may not be financially rational for your situation.`;
+  }
+
+  const breakdown: ExtrasCalculationBreakdown = {
+    premiumPaid:         annualPremium,
+    estimatedBenefits:   estimatedAnnualBenefit,
+    netCost:             netAnnualCost,
+    breakEvenFrequency:  annualPremium > 0
+      ? `~${Math.ceil(annualPremium / Math.max(DENTAL_BENEFIT_PER_VISIT, 1))} dental visits/year`
+      : 'n/a',
+  };
+
+  return {
+    isFinanciallyRational,
+    annualPremium,
+    estimatedAnnualBenefit,
+    netAnnualCost,
+    benefitRatio,
+    recommendation,
+    calculationBreakdown: breakdown,
+  };
+}
+
+// ─── Main orchestrator ───────────────────────────────────────────────────────
+
+/**
+ * Runs the full flagship calculation pipeline for a given set of WizardInputs.
+ * All functions are pure and synchronous — safe to call in useMemo.
+ */
+export function runCalculations(inputs: WizardInputs): CalculationOutput {
+  const resolved = resolveInputs(inputs);
+
+  // Use bronze as the base premium for MLS/rebate/LHC calculations
+  // (bronze is the reference tier — cheapest non-Basic hospital cover)
+  const bronzeBasePremium = Math.round(
+    HOSPITAL_PREMIUMS_SINGLE.bronze * FAMILY_PREMIUM_MULTIPLIERS[resolved.familyType],
+  );
+
+  const mlsResult = calculateMLS({
+    mlsIncome:         resolved.mlsIncome,
+    familyType:        resolved.familyType,
+    dependentChildren: resolved.dependentChildren,
+  });
+
+  const rebateResult = calculateRebate({
+    mlsIncome:                  resolved.mlsIncome,
+    familyType:                 resolved.familyType,
+    dependentChildren:          resolved.dependentChildren,
+    ageBracket:                 resolved.ageBracket,
+    annualPremiumBeforeRebate:  bronzeBasePremium,
+  });
+
+  const lhcResult = calculateLHCLoading({
+    currentAge:            resolved.age,
+    hasHeldHospitalCover:  resolved.lhcHistory.hasHeldHospitalCover,
+    yearsHeld:             resolved.lhcHistory.yearsHeld,
+    basePremium:           bronzeBasePremium,
+  });
+
+  const scenarioResult = calculateScenarioComparison({
+    mlsResult,
+    mlsIncome:         resolved.mlsIncome,
+    familyType:        resolved.familyType,
+    dependentChildren: resolved.dependentChildren,
+    ageBracket:        resolved.ageBracket,
+    lhcResult,
+    state:             resolved.state,
+  });
+
+  const projectionResult = calculateProjectionFromScenario(scenarioResult);
+
+  const extrasResult: ExtrasResult | null =
+    inputs.includeHealthNeeds && inputs.extrasDesired !== 'none'
+      ? calculateExtrasValue(inputs)
+      : null;
+
+  // Wait time results are populated in Phase 8
+  const waitTimeResults: WaitTimeResult[] = [];
+
+  return {
+    inputs,
+    resolvedIncome: resolved.mlsIncome,
+    mlsResult,
+    rebateResult,
+    lhcResult,
+    scenarioResult,
+    projectionResult,
+    extrasResult,
+    waitTimeResults,
+    calculatedAt:  new Date().toISOString(),
+    ratesVersion:  'FY2025-26',
+  };
+}
+```
+
+**Step 2: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: Clean.
+
+**Step 3: Run tests to ensure nothing broke**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx jest --passWithNoTests 2>&1 | tail -10`
+Expected: 132 tests pass.
+
+**Step 4: Commit**
+
+```bash
+git add src/lib/runCalculations.ts
+git commit -m "feat: add runCalculations orchestrator with extras value calculation"
+```
+
+---
+
+### Task 4: Build Step 5 — Review & Calculate
+
+**Files:**
+- Create: `src/components/wizard/steps/Step5Review.tsx`
+
+**Step 1: Create the Review step**
+
+This step shows all answers as 4 review cards (each with an Edit link) plus a live preview of MLS tier, rebate rate, and LHC loading. The "Show Me the Numbers" CTA encodes all wizard state as URL params and navigates to the results page.
+
+```tsx
+'use client';
+
+import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useWizard } from '@/components/wizard/WizardContext';
+import { runCalculations } from '@/lib/runCalculations';
+import { buildWizardParams } from '@/lib/wizardParams';
+import { INCOME_RANGE_LABELS } from '@/lib/resolveInputs';
+import { formatDollars, formatPercentage } from '@/lib/format';
+import type { WizardStep } from '@/lib/types';
+
+const FAMILY_LABELS: Record<string, string> = {
+  single: 'Single',
+  couple: 'Couple',
+  family: 'Family',
+  'single-parent': 'Single parent',
+};
+
+const COVER_STATUS_LABELS: Record<string, string> = {
+  yes:           'Yes — currently insured',
+  never:         'Never had hospital cover',
+  'used-to-have':'Used to have cover',
+};
+
+const TIER_LABELS: Record<string, string> = {
+  none:   'Not specified',
+  basic:  'Basic',
+  bronze: 'Bronze',
+  silver: 'Silver',
+  gold:   'Gold',
+};
+
+const MLS_TIER_LABELS: Record<string, string> = {
+  base: 'No surcharge',
+  '1':  'Tier 1 — 1.0%',
+  '2':  'Tier 2 — 1.25%',
+  '3':  'Tier 3 — 1.5%',
+};
+
+const MLS_TIER_COLORS: Record<string, string> = {
+  base: 'bg-secondary/10 text-secondary border-secondary/20',
+  '1':  'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300',
+  '2':  'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300',
+  '3':  'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300',
+};
+
+interface ReviewSectionProps {
+  title: string;
+  step: WizardStep;
+  children: React.ReactNode;
+  onEdit: (step: WizardStep) => void;
+}
+
+function ReviewSection({ title, step, children, onEdit }: ReviewSectionProps) {
+  return (
+    <div className="card">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-base font-semibold">{title}</h3>
+        <button
+          type="button"
+          onClick={() => onEdit(step)}
+          className="text-sm text-primary hover:underline focus:outline-none"
+          aria-label={`Edit ${title}`}
+        >
+          Edit ›
+        </button>
+      </div>
+      <dl className="space-y-1 text-sm">{children}</dl>
+    </div>
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-4">
+      <dt className="text-muted">{label}</dt>
+      <dd className="font-medium text-right">{value}</dd>
+    </div>
+  );
+}
+
+export default function Step5Review() {
+  const { state, goToStep, prev } = useWizard();
+  const router = useRouter();
+  const { inputs } = state;
+
+  // Run full calculation pipeline for the live preview
+  const preview = useMemo(() => {
+    if (inputs.age < 18) return null;
+    try {
+      return runCalculations(inputs);
+    } catch {
+      return null;
+    }
+  }, [inputs]);
+
+  function handleCalculate() {
+    const params = buildWizardParams(inputs);
+    router.push(`/should-i-get-private-health-insurance/results?${params.toString()}`);
+  }
+
+  const canCalculate = inputs.age >= 18 && inputs.age <= 120;
+
+  return (
+    <div className="space-y-8">
+      {/* ── Review cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <ReviewSection title="About You" step={1} onEdit={goToStep}>
+          <ReviewRow label="Age"     value={String(inputs.age) || '—'} />
+          <ReviewRow label="Family"  value={FAMILY_LABELS[inputs.familyType]} />
+          {(inputs.familyType === 'family' || inputs.familyType === 'single-parent') && (
+            <ReviewRow label="Children" value={String(inputs.dependentChildren)} />
+          )}
+          <ReviewRow label="State"   value={inputs.state} />
+        </ReviewSection>
+
+        <ReviewSection title="Income" step={2} onEdit={goToStep}>
+          <ReviewRow
+            label="Income range"
+            value={INCOME_RANGE_LABELS[inputs.incomeRange]}
+          />
+          {inputs.exactIncome !== null && (
+            <ReviewRow
+              label="Exact income"
+              value={formatDollars(inputs.exactIncome)}
+            />
+          )}
+        </ReviewSection>
+
+        <ReviewSection title="Insurance Status" step={3} onEdit={goToStep}>
+          <ReviewRow label="Cover status" value={COVER_STATUS_LABELS[inputs.coverStatus]} />
+          {inputs.coverStatus === 'yes' && (
+            <>
+              <ReviewRow label="Tier" value={TIER_LABELS[inputs.currentTier]} />
+              {inputs.extrasOnly && (
+                <ReviewRow label="Type" value="Extras only (no hospital)" />
+              )}
+            </>
+          )}
+          {inputs.coverStatus === 'used-to-have' && (
+            <ReviewRow label="Years held" value={`${inputs.yearsHeld} year(s)`} />
+          )}
+        </ReviewSection>
+
+        <ReviewSection title="Health Needs" step={4} onEdit={goToStep}>
+          {!inputs.includeHealthNeeds ? (
+            <ReviewRow label="Health needs" value="Skipped" />
+          ) : (
+            <>
+              <ReviewRow label="Dental"  value={`${inputs.dentalVisitsPerYear} visit(s)/yr`} />
+              <ReviewRow label="Optical" value={`${inputs.opticalClaimsPerYear} claim(s)/yr`} />
+              <ReviewRow label="Physio"  value={`${inputs.physioSessionsPerYear} session(s)/yr`} />
+              <ReviewRow label="Extras"  value={inputs.extrasDesired === 'none' ? 'None' : inputs.extrasDesired} />
+              {inputs.plannedProcedures.length > 0 && (
+                <ReviewRow
+                  label="Procedures"
+                  value={`${inputs.plannedProcedures.length} selected`}
+                />
+              )}
+            </>
+          )}
+        </ReviewSection>
+      </div>
+
+      {/* ── Live preview ── */}
+      {preview && (
+        <div className="card bg-card border border-border">
+          <h3 className="text-base font-semibold mb-4">Your situation at a glance</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+            <div className="text-center p-3 rounded-lg bg-background border border-border">
+              <p className="text-muted mb-1">MLS rate</p>
+              <span
+                className={`inline-block px-2 py-0.5 rounded text-xs font-semibold border ${
+                  MLS_TIER_COLORS[preview.mlsResult.tier]
+                }`}
+              >
+                {MLS_TIER_LABELS[preview.mlsResult.tier]}
+              </span>
+              {preview.mlsResult.annualMLS > 0 && (
+                <p className="mt-1 font-medium">
+                  {formatDollars(preview.mlsResult.annualMLS)}/yr
+                </p>
+              )}
+            </div>
+
+            <div className="text-center p-3 rounded-lg bg-background border border-border">
+              <p className="text-muted mb-1">Govt rebate</p>
+              <p className="text-lg font-bold text-primary">
+                {formatPercentage(preview.rebateResult.rebatePercentage)}
+              </p>
+              <p className="text-xs text-muted mt-0.5">on your premium</p>
+            </div>
+
+            <div className="text-center p-3 rounded-lg bg-background border border-border">
+              <p className="text-muted mb-1">LHC loading</p>
+              {preview.lhcResult.loadingPercentage > 0 ? (
+                <>
+                  <p className="text-lg font-bold text-warning">
+                    +{formatPercentage(preview.lhcResult.loadingPercentage)}
+                  </p>
+                  <p className="text-xs text-muted mt-0.5">on hospital cover</p>
+                </>
+              ) : (
+                <p className="text-lg font-bold text-secondary">None</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Navigation ── */}
+      <div className="flex justify-between">
+        <button
+          type="button"
+          className="btn-secondary text-lg px-8 py-4"
+          onClick={() => prev()}
+        >
+          &larr; Back
+        </button>
+        <button
+          type="button"
+          disabled={!canCalculate}
+          onClick={handleCalculate}
+          className={[
+            'btn-primary text-lg px-8 py-4',
+            !canCalculate ? 'opacity-50 cursor-not-allowed' : '',
+          ].join(' ')}
+        >
+          Show Me the Numbers &rarr;
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+**Step 2: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: Clean.
+
+**Step 3: Commit**
+
+```bash
+git add src/components/wizard/steps/Step5Review.tsx
+git commit -m "feat: add Step 5 Review & Calculate with live preview and URL encoding"
+```
+
+---
+
+### Task 5: Wire Step 5 into WizardContainer
+
+**Files:**
+- Modify: `src/components/wizard/WizardContainer.tsx`
+
+**Step 1: Add Step 5 import and case**
+
+In `WizardContainer.tsx`, add the import:
+```tsx
+import Step5Review from '@/components/wizard/steps/Step5Review';
+```
+
+And in the `renderStep` switch, replace the comment for case 5:
+```tsx
+case 5: return <Step5Review />;
+```
+
+Remove the comment line `// case 5: return <Step5Review />; — added in Task 4`.
+
+**Step 2: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: Clean.
+
+**Step 3: Commit**
+
+```bash
+git add src/components/wizard/WizardContainer.tsx
+git commit -m "feat: wire Step 5 Review into WizardContainer — wizard complete"
+```
+
+---
+
+### Task 6: Build results page.tsx + ResultsClient scaffold + Scenario Cards
+
+**Files:**
+- Create: `src/app/should-i-get-private-health-insurance/results/page.tsx`
+- Create: `src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx`
+
+**Step 1: Create the server page**
+
+```tsx
+// src/app/should-i-get-private-health-insurance/results/page.tsx
+import type { Metadata } from 'next';
+import { Suspense } from 'react';
+import { SITE_URL, SITE_NAME } from '@/lib/siteConfig';
+import ResultsClient from './ResultsClient';
+
+export const metadata: Metadata = {
+  title: `Your Private Health Insurance Analysis | ${SITE_NAME}`,
+  description:
+    'Your personalised private health insurance analysis — compare costs, see your MLS, rebate and LHC loading, and get a clear recommendation based on your situation.',
+  robots: { index: false, follow: true },
+  openGraph: {
+    title: 'Your Private Health Insurance Analysis',
+    description: 'Personalised comparison: No Insurance vs Basic/Bronze vs Silver/Gold.',
+    siteName: SITE_NAME,
+    type: 'website',
+  },
+};
+
+export default function ResultsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-16 text-center">
+          <p className="text-muted text-lg">Calculating your results…</p>
+        </div>
+      }
+    >
+      <ResultsClient />
+    </Suspense>
+  );
+}
+```
+
+**Step 2: Create ResultsClient with URL parsing + Scenario Cards**
+
+```tsx
+// src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx
+'use client';
+
+import { useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { parseWizardParams } from '@/lib/wizardParams';
+import { runCalculations } from '@/lib/runCalculations';
+import { formatDollars } from '@/lib/format';
+import type { CalculationOutput, ScenarioOption } from '@/lib/types';
+
+// ─── Scenario card helpers ───────────────────────────────────────────────────
+
+const SCENARIO_ICONS: Record<string, string> = {
+  'no-insurance': '🏥',
+  'basic-bronze':  '🛡',
+  'silver-gold':   '⭐',
+};
+
+const RECOMMENDED_LABEL = 'Recommended';
+const CHEAPEST_LABEL    = 'Cheapest';
+const COVERAGE_LABEL    = 'Most Coverage';
+
+function ScenarioCard({
+  scenario,
+  isRecommended,
+}: {
+  scenario: ScenarioOption;
+  isRecommended: boolean;
+}) {
+  const badge = isRecommended
+    ? RECOMMENDED_LABEL
+    : scenario.isCheapest
+    ? CHEAPEST_LABEL
+    : scenario.isMostCoverage
+    ? COVERAGE_LABEL
+    : null;
+
+  return (
+    <div
+      className={[
+        'card flex flex-col gap-4 relative',
+        isRecommended ? 'border-2 border-primary ring-1 ring-primary/20' : '',
+      ].join(' ')}
+    >
+      {badge && (
+        <span
+          className={[
+            'absolute -top-3 left-4 px-3 py-0.5 rounded-full text-xs font-bold border',
+            isRecommended
+              ? 'bg-primary text-white border-primary'
+              : 'bg-secondary/10 text-secondary border-secondary/20',
+          ].join(' ')}
+        >
+          {badge}
+        </span>
+      )}
+
+      {/* Header */}
+      <div className="pt-2">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-2xl" aria-hidden="true">
+            {SCENARIO_ICONS[scenario.id]}
+          </span>
+          <h3 className="text-lg font-bold">{scenario.label}</h3>
+        </div>
+        <p className="text-sm text-muted">{scenario.description}</p>
+      </div>
+
+      {/* Cost */}
+      <div className="rounded-lg bg-background p-4 border border-border">
+        <div className="flex justify-between items-baseline">
+          <span className="text-sm text-muted">Year 1 cost</span>
+          <span className="text-2xl font-bold text-text-main">
+            {formatDollars(scenario.year1Cost)}
+          </span>
+        </div>
+        <div className="flex justify-between items-baseline mt-1">
+          <span className="text-sm text-muted">10-year total</span>
+          <span className="text-lg font-semibold text-muted">
+            {formatDollars(scenario.tenYearCost)}
+          </span>
+        </div>
+      </div>
+
+      {/* Coverage */}
+      <p className="text-sm text-muted">{scenario.coverageDescription}</p>
+
+      {/* Trade-offs */}
+      <ul className="space-y-1">
+        {scenario.tradeoffs.map((t, i) => (
+          <li key={i} className="text-sm flex items-start gap-2">
+            <span className="mt-0.5 text-muted">•</span>
+            <span>{t}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// ─── Main results client ─────────────────────────────────────────────────────
+
+export default function ResultsClient() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const { inputs, output } = useMemo(() => {
+    const inputs = parseWizardParams(searchParams);
+    if (!inputs) return { inputs: null, output: null };
+    try {
+      return { inputs, output: runCalculations(inputs) };
+    } catch {
+      return { inputs, output: null };
+    }
+  }, [searchParams]);
+
+  // ── Guard: invalid params ──
+  if (!inputs || !output) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <h1 className="mb-4">Something went wrong</h1>
+        <p className="text-muted mb-6">
+          We couldn&apos;t load your results. Please go back and complete the wizard.
+        </p>
+        <button
+          onClick={() => router.push('/should-i-get-private-health-insurance')}
+          className="btn-primary"
+        >
+          Start again
+        </button>
+      </div>
+    );
+  }
+
+  const { scenarioResult } = output;
+  const [noIns, basic, silverGold] = scenarioResult.scenarios;
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-12">
+
+      {/* ── Page header ── */}
+      <div className="text-center">
+        <h1 className="mb-2">Your Private Health Insurance Analysis</h1>
+        <p className="text-muted max-w-2xl mx-auto">
+          Based on your income, age, and situation — FY 2025–26 rates.
+        </p>
+      </div>
+
+      {/* ── Recommendation banner ── */}
+      <div className="card bg-primary/5 border-primary/20">
+        <p className="font-semibold text-text-main mb-1">Our recommendation</p>
+        <p className="text-muted">{scenarioResult.recommendationReason}</p>
+      </div>
+
+      {/* ── Scenario cards ── */}
+      <section aria-labelledby="scenarios-heading">
+        <h2 id="scenarios-heading" className="text-2xl font-bold mb-6">
+          Cost Comparison
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ScenarioCard
+            scenario={noIns}
+            isRecommended={scenarioResult.recommendedScenario === 'no-insurance'}
+          />
+          <ScenarioCard
+            scenario={basic}
+            isRecommended={scenarioResult.recommendedScenario === 'basic-bronze'}
+          />
+          <ScenarioCard
+            scenario={silverGold}
+            isRecommended={scenarioResult.recommendedScenario === 'silver-gold'}
+          />
+        </div>
+
+        {scenarioResult.breakEvenAdmissions !== null && (
+          <p className="text-sm text-muted mt-4 text-center">
+            Silver/Gold breaks even vs No Insurance at approximately{' '}
+            <strong>{scenarioResult.breakEvenAdmissions} hospital admissions/year</strong>.
+          </p>
+        )}
+      </section>
+
+      {/* Additional sections added in Tasks 7–9 */}
+
+      {/* ── Edit answers link ── */}
+      <div className="text-center pt-4 border-t border-border">
+        <button
+          onClick={() => router.push('/should-i-get-private-health-insurance')}
+          className="text-sm text-primary hover:underline"
+        >
+          ← Edit your answers
+        </button>
+      </div>
+
+    </div>
+  );
+}
+```
+
+**Step 3: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -30`
+Expected: Clean.
+
+**Step 4: Commit**
+
+```bash
+git add src/app/should-i-get-private-health-insurance/results/
+git commit -m "feat: add results page with scenario cards and recommendation banner"
+```
+
+---
+
+### Task 7: Add "What This Means" + MLS breakdown + LHC panel to ResultsClient
+
+**Files:**
+- Modify: `src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx`
+
+**Step 1: Add the helper components and insert them into the return JSX**
+
+Add these components ABOVE the `export default function ResultsClient()` declaration (after the ScenarioCard component):
+
+```tsx
+// ─── What This Means ─────────────────────────────────────────────────────────
+
+function WhatThisMeans({ output }: { output: CalculationOutput }) {
+  const { inputs, mlsResult, lhcResult, scenarioResult } = output;
+  const { age, familyType, coverStatus } = inputs;
+
+  // Determine communication branch
+  const isUnder31       = age < 31;
+  const isRetiree       = age >= 65;
+  const isIncomeTriggered =
+    mlsResult.tier !== 'base' &&
+    scenarioResult.scenarios[1].year1Cost < mlsResult.annualMLS;
+  const hasFamily =
+    familyType === 'family' || familyType === 'single-parent' || familyType === 'couple';
+  const hasHighLoading  = lhcResult.loadingPercentage >= 0.20;
+
+  let heading = 'What this means for you';
+  let message: React.ReactNode;
+
+  if (isUnder31) {
+    heading = 'You\'re under 31 — now is the easiest time to decide';
+    message = (
+      <>
+        <p>
+          You don&apos;t have a Lifetime Health Cover loading yet — your premiums are at the base
+          rate. If you take out hospital cover before you turn 31, you lock in no loading forever
+          (as long as you keep the cover).
+        </p>
+        {mlsResult.tier === 'base' ? (
+          <p className="mt-3">
+            Your income is below the MLS threshold, so you won&apos;t pay a surcharge without
+            insurance. The decision is purely about whether you want private hospital access —
+            not a tax issue.
+          </p>
+        ) : (
+          <p className="mt-3">
+            Your income does trigger the MLS at {Math.round(mlsResult.mlsRate * 100)}%. Getting
+            even basic hospital cover would eliminate this surcharge — and at your age, your
+            premiums are at their lowest.
+          </p>
+        )}
+      </>
+    );
+  } else if (isRetiree) {
+    heading = 'Insurance decisions at 65+ are different';
+    message = (
+      <>
+        <p>
+          At {age}, you qualify for a higher government rebate on your premium —{' '}
+          {age >= 70 ? 'the maximum age tier (70+)' : 'the 65–69 age tier'}. This reduces the
+          cost of any hospital cover you choose.
+        </p>
+        <p className="mt-3">
+          Consider that health needs tend to increase with age. If you don&apos;t currently
+          have cover, the LHC loading and potential wait times for elective procedures are
+          worth factoring into the decision alongside the cost comparison above.
+        </p>
+      </>
+    );
+  } else if (isIncomeTriggered) {
+    heading = 'The numbers favour getting insurance';
+    message = (
+      <>
+        <p>
+          Your MLS of {formatDollars(mlsResult.annualMLS)}/year costs more than Basic/Bronze
+          cover after rebate. In purely financial terms, getting hospital cover saves you money
+          — you&apos;re paying a tax on not having insurance.
+        </p>
+        <p className="mt-3">
+          That said, Basic/Bronze is a limited product — it&apos;s mainly a tax-saving
+          strategy. If you actually want private hospital access and choice of doctor, you&apos;d
+          need at least Silver cover.
+        </p>
+        {hasHighLoading && (
+          <p className="mt-3 text-warning font-medium">
+            Note: your LHC loading of {Math.round(lhcResult.loadingPercentage * 100)}% adds
+            significantly to any policy cost. Once you take out cover and hold it for 10 years,
+            this loading disappears.
+          </p>
+        )}
+      </>
+    );
+  } else if (hasFamily) {
+    heading = 'Family cover — the MLS threshold is doubled';
+    message = (
+      <>
+        <p>
+          Couples and families have double the MLS income threshold of singles. If your combined
+          household income is below $202,000, neither of you pays the surcharge — insurance is a
+          personal choice, not a financial obligation.
+        </p>
+        <p className="mt-3">
+          For families with young children, private hospital cover gives you access to private
+          obstetrics, choice of specialist, and shorter waits for non-urgent procedures. Whether
+          that&apos;s worth the premium depends on your health needs and priorities.
+        </p>
+      </>
+    );
+  } else {
+    // Default: cost of living / general case
+    heading = 'The honest picture';
+    message = (
+      <>
+        {mlsResult.tier === 'base' ? (
+          <p>
+            Your income is below the MLS threshold — you won&apos;t pay a surcharge without
+            insurance. Private hospital cover is a personal choice about access and convenience,
+            not a tax obligation.
+          </p>
+        ) : (
+          <p>
+            Your MLS of {formatDollars(mlsResult.annualMLS)}/year is the cost of going without
+            hospital cover. Whether insurance is worth it depends on whether the premium (after
+            rebate) represents better value than paying the surcharge and using the public system.
+          </p>
+        )}
+        {coverStatus === 'yes' ? (
+          <p className="mt-3">
+            You currently have hospital cover. If you&apos;re thinking of dropping it, remember
+            that you have a 3-year grace period (1,094 days) before your LHC loading starts
+            accruing again — but your 10-year removal clock resets if you lapse longer.
+          </p>
+        ) : (
+          <p className="mt-3">
+            The public hospital system provides good quality care for most conditions. The main
+            advantages of private cover are choice of specialist, private room, and shorter waits
+            for elective procedures. For emergency care, the public system is identical.
+          </p>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <section aria-labelledby="what-this-means-heading" className="card">
+      <h2 id="what-this-means-heading" className="text-xl font-bold mb-4">
+        {heading}
+      </h2>
+      <div className="text-muted space-y-0 leading-relaxed">{message}</div>
+    </section>
+  );
+}
+
+// ─── MLS Breakdown ───────────────────────────────────────────────────────────
+
+const MLS_TIER_BADGE_COLORS: Record<string, string> = {
+  base: 'bg-secondary/10 text-secondary border-secondary/20',
+  '1':  'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300',
+  '2':  'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300',
+  '3':  'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300',
+};
+
+const MLS_TIER_NAMES: Record<string, string> = {
+  base: 'Base (no surcharge)',
+  '1':  'Tier 1 — 1.0%',
+  '2':  'Tier 2 — 1.25%',
+  '3':  'Tier 3 — 1.5%',
+};
+
+function MLSBreakdownPanel({ output }: { output: CalculationOutput }) {
+  const { mlsResult } = output;
+  if (!mlsResult.isAboveThreshold) {
+    return (
+      <section aria-labelledby="mls-heading" className="card">
+        <h2 id="mls-heading" className="text-xl font-bold mb-3">
+          Medicare Levy Surcharge
+        </h2>
+        <div className="flex items-center gap-3">
+          <span className="inline-block px-2 py-0.5 rounded border text-sm font-semibold bg-secondary/10 text-secondary border-secondary/20">
+            No surcharge
+          </span>
+          <p className="text-muted text-sm">
+            Your income is below the MLS threshold — no surcharge applies.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section aria-labelledby="mls-heading" className="card">
+      <h2 id="mls-heading" className="text-xl font-bold mb-4">
+        Medicare Levy Surcharge
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Your MLS income</p>
+          <p className="text-lg font-bold">{formatDollars(mlsResult.mlsIncome)}</p>
+        </div>
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Rate applied</p>
+          <span className={`inline-block px-2 py-0.5 rounded border text-xs font-semibold ${MLS_TIER_BADGE_COLORS[mlsResult.tier]}`}>
+            {MLS_TIER_NAMES[mlsResult.tier]}
+          </span>
+        </div>
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Annual surcharge</p>
+          <p className="text-lg font-bold text-warning">{formatDollars(mlsResult.annualMLS)}</p>
+        </div>
+      </div>
+      {mlsResult.nextThreshold && (
+        <p className="text-xs text-muted mt-3">
+          Next threshold: {formatDollars(mlsResult.nextThreshold)} (rate increases to{' '}
+          {mlsResult.tier === '1' ? '1.25%' : '1.5%'}).
+        </p>
+      )}
+      <p className="text-xs text-muted mt-2">
+        Getting basic hospital cover eliminates this surcharge entirely.
+      </p>
+    </section>
+  );
+}
+
+// ─── LHC Panel ───────────────────────────────────────────────────────────────
+
+function LHCPanel({ output }: { output: CalculationOutput }) {
+  const { lhcResult } = output;
+  if (lhcResult.loadingPercentage === 0 && lhcResult.youthDiscount === 0) {
+    return (
+      <section aria-labelledby="lhc-heading" className="card">
+        <h2 id="lhc-heading" className="text-xl font-bold mb-3">
+          Lifetime Health Cover Loading
+        </h2>
+        <p className="text-secondary font-medium">
+          No LHC loading applies to you — your premiums are at the base rate.
+        </p>
+        {lhcResult.youthDiscount > 0 && (
+          <p className="text-sm text-muted mt-2">
+            You may be eligible for a {Math.round(lhcResult.youthDiscount * 100)}% youth
+            discount if your insurer offers it.
+          </p>
+        )}
+      </section>
+    );
+  }
+
+  const loadingPct = Math.round(lhcResult.loadingPercentage * 100);
+
+  return (
+    <section aria-labelledby="lhc-heading" className="card">
+      <h2 id="lhc-heading" className="text-xl font-bold mb-4">
+        Lifetime Health Cover Loading
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Your LHC loading</p>
+          <p className="text-lg font-bold text-warning">+{loadingPct}%</p>
+        </div>
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Annual loading cost</p>
+          <p className="text-lg font-bold">{formatDollars(lhcResult.annualLoadingCost)}</p>
+        </div>
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">10-year cumulative</p>
+          <p className="text-lg font-bold">{formatDollars(lhcResult.tenYearCumulativeLoading)}</p>
+        </div>
+      </div>
+      {lhcResult.yearsUntilLoadingRemoved !== null && (
+        <p className="text-sm text-muted mt-3">
+          If you take out hospital cover now, the loading will be removed after{' '}
+          {lhcResult.yearsUntilLoadingRemoved} more year
+          {lhcResult.yearsUntilLoadingRemoved !== 1 ? 's' : ''} of continuous cover.
+        </p>
+      )}
+    </section>
+  );
+}
+```
+
+Now insert these three components into the JSX of `ResultsClient`, after the scenario cards section and before the edit-answers link:
+
+```tsx
+      {/* ── What This Means ── */}
+      <WhatThisMeans output={output} />
+
+      {/* ── MLS Breakdown ── */}
+      <MLSBreakdownPanel output={output} />
+
+      {/* ── LHC Panel ── */}
+      <LHCPanel output={output} />
+```
+
+**Step 2: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: Clean.
+
+**Step 3: Commit**
+
+```bash
+git add src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx
+git commit -m "feat: add What This Means, MLS breakdown, and LHC panel to results"
+```
+
+---
+
+### Task 8: Add 10-year projection + Ambulance alert + Key Insights accordion
+
+**Files:**
+- Modify: `src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx`
+
+**Step 1: Add the three components ABOVE the default export**
+
+```tsx
+// ─── 10-Year Projection ───────────────────────────────────────────────────────
+
+function ProjectionPanel({ output }: { output: CalculationOutput }) {
+  const { projectionResult } = output;
+  const { yearByYear, tenYearTotal, opportunityCost } = projectionResult;
+
+  return (
+    <section aria-labelledby="projection-heading" className="card">
+      <h2 id="projection-heading" className="text-xl font-bold mb-2">
+        10-Year Cost Projection
+      </h2>
+      <p className="text-sm text-muted mb-4">
+        Premiums grow at the historical average of{' '}
+        {Math.round(projectionResult.growthRateUsed * 100)}%/year.
+        {projectionResult.loadingRemovalYear !== null && (
+          <> LHC loading removed after Year {projectionResult.loadingRemovalYear}.</>
+        )}
+      </p>
+
+      {/* Totals summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 text-sm">
+        {[
+          { label: 'No Insurance', value: tenYearTotal.noInsurance },
+          { label: 'Basic / Bronze', value: tenYearTotal.basicBronze },
+          { label: 'Silver / Gold',  value: tenYearTotal.silverGold },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-background rounded-lg p-3 border border-border text-center">
+            <p className="text-muted mb-1">{label}</p>
+            <p className="text-lg font-bold">{formatDollars(value)}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Year-by-year table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left py-2 font-semibold bg-transparent">Year</th>
+              <th className="text-right py-2 font-semibold bg-transparent">No Insurance</th>
+              <th className="text-right py-2 font-semibold bg-transparent">Basic/Bronze</th>
+              <th className="text-right py-2 font-semibold bg-transparent">Silver/Gold</th>
+            </tr>
+          </thead>
+          <tbody>
+            {yearByYear.map((row) => (
+              <tr
+                key={row.year}
+                className={[
+                  'border-b border-border/50',
+                  row.lhcLoadingRemoved ? 'bg-secondary/5' : '',
+                ].join(' ')}
+              >
+                <td className="py-2">
+                  {row.calendarYear}
+                  {row.lhcLoadingRemoved && (
+                    <span className="ml-2 text-xs text-secondary font-medium">
+                      (loading removed)
+                    </span>
+                  )}
+                </td>
+                <td className="text-right py-2">{formatDollars(row.noInsuranceCost)}</td>
+                <td className="text-right py-2">{formatDollars(row.basicBronzeCost)}</td>
+                <td className="text-right py-2">{formatDollars(row.silverGoldCost)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-xs text-muted mt-3">
+        Opportunity cost of Silver/Gold premiums (invested at 5% p.a.):
+        approximately {formatDollars(opportunityCost)} over 10 years.
+      </p>
+    </section>
+  );
+}
+
+// ─── Ambulance Alert ─────────────────────────────────────────────────────────
+
+function AmbulanceAlert({ output }: { output: CalculationOutput }) {
+  const { inputs } = output;
+  const FREE_STATES = ['QLD', 'TAS'];
+  if (FREE_STATES.includes(inputs.state)) return null;
+
+  const AMBULANCE_COSTS: Record<string, { cost: string; note: string }> = {
+    VIC: { cost: 'up to $1,282',  note: 'per emergency call-out' },
+    NSW: { cost: 'around $401',   note: 'per emergency call-out' },
+    SA:  { cost: 'up to $1,046',  note: 'per emergency call-out' },
+    WA:  { cost: 'up to $943',    note: 'per emergency call-out' },
+    ACT: { cost: 'around $401',   note: 'per emergency call-out' },
+    NT:  { cost: 'up to $636',    note: 'per emergency call-out' },
+  };
+  const info = AMBULANCE_COSTS[inputs.state] ?? { cost: 'several hundred dollars', note: '' };
+
+  return (
+    <section className="card border-warning/30 bg-warning/5">
+      <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
+        <span aria-hidden="true">🚑</span> Ambulance Cover — {inputs.state}
+      </h2>
+      <p className="text-sm text-muted">
+        In {inputs.state}, an emergency ambulance can cost{' '}
+        <strong>{info.cost}</strong> {info.note}. Private hospital cover typically includes
+        ambulance cover, or you can purchase an ambulance subscription separately.
+      </p>
+      <p className="text-xs text-muted mt-2">
+        An ambulance subscription in most states costs $30–$50/year for a single adult.
+      </p>
+    </section>
+  );
+}
+
+// ─── Key Insights Accordion ───────────────────────────────────────────────────
+
+function AccordionItem({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <details className="border-b border-border last:border-0">
+      <summary className="flex items-center justify-between py-4 cursor-pointer select-none font-medium hover:text-primary focus:outline-none">
+        {title}
+        <span className="ml-4 text-muted text-lg" aria-hidden="true">+</span>
+      </summary>
+      <div className="pb-4 text-sm text-muted space-y-2">{children}</div>
+    </details>
+  );
+}
+
+function KeyInsightsAccordion({ output }: { output: CalculationOutput }) {
+  const { mlsResult, rebateResult, lhcResult } = output;
+
+  return (
+    <section aria-labelledby="insights-heading" className="card">
+      <h2 id="insights-heading" className="text-xl font-bold mb-4">
+        Key Insights
+      </h2>
+      <div>
+        <AccordionItem title="How your MLS was calculated">
+          <p>
+            The Medicare Levy Surcharge is applied to your <strong>full MLS income</strong> at
+            the tier rate — not just the amount above the threshold. Your MLS income of{' '}
+            {formatDollars(mlsResult.mlsIncome)} falls in <strong>{mlsResult.tier === 'base' ? 'the base tier (no surcharge)' : `Tier ${mlsResult.tier}`}</strong>.
+          </p>
+          {mlsResult.isAboveThreshold && (
+            <p>
+              MLS income includes: taxable income + reportable fringe benefits + net
+              investment losses + reportable super contributions. Check your tax return for
+              these components.
+            </p>
+          )}
+        </AccordionItem>
+
+        <AccordionItem title="Understanding the government rebate">
+          <p>
+            Your rebate is <strong>{Math.round(rebateResult.rebatePercentage * 100 * 10) / 10}%</strong>{' '}
+            (income tier: {rebateResult.tier}, age bracket: {rebateResult.ageBracket}).
+            Tier 3 earners (above $158,001 single / $316,001 family) receive 0% rebate.
+          </p>
+          <p>
+            The rebate is applied directly to your premium — you can claim it as a reduced
+            premium from your insurer, or claim it back in your tax return.
+          </p>
+        </AccordionItem>
+
+        <AccordionItem title="What Basic/Bronze actually covers">
+          <p>
+            Basic hospital cover is required to meet the minimum standards for MLS avoidance,
+            but it covers very little: rehabilitation, psychiatric care, and palliative care
+            only. Bronze adds some additional services but restricts most elective procedures.
+          </p>
+          <p>
+            If you need a hip replacement, cataract surgery, or any major elective procedure,
+            you would need at least Silver cover (and often Gold for some procedures).
+          </p>
+        </AccordionItem>
+
+        <AccordionItem title="Gap fees: the hidden cost">
+          <p>
+            Even with hospital cover, you often pay a gap fee — the difference between what
+            your doctor charges and what Medicare + your insurer pays. The average gap per
+            hospital episode is around <strong>$478</strong>.
+          </p>
+          <p>
+            Ask your specialist upfront about &quot;no-gap&quot; or &quot;known-gap&quot;
+            arrangements. Your insurer can tell you which doctors in your area have no-gap
+            agreements.
+          </p>
+        </AccordionItem>
+
+        <AccordionItem title="Private health in emergencies">
+          <p>
+            In a genuine medical emergency, the public hospital system treats you
+            immediately — private insurance makes no difference to emergency care. Private
+            cover is most valuable for <em>elective</em> procedures and specialist access.
+          </p>
+        </AccordionItem>
+
+        <AccordionItem title="Waiting periods for new policies">
+          <p>
+            If you take out a new policy, you&apos;ll face waiting periods before you can
+            claim:
+          </p>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>Hospital: 12 months for pre-existing conditions</li>
+            <li>Psychiatric: 2 months</li>
+            <li>Obstetrics / pregnancy: 12 months</li>
+            <li>Accidents: immediately covered (no waiting period)</li>
+          </ul>
+        </AccordionItem>
+      </div>
+    </section>
+  );
+}
+```
+
+Now add these to the JSX in `ResultsClient`, after the LHC panel and before the edit-answers link:
+
+```tsx
+      {/* ── 10-Year Projection ── */}
+      <ProjectionPanel output={output} />
+
+      {/* ── Ambulance Alert ── */}
+      <AmbulanceAlert output={output} />
+
+      {/* ── Key Insights ── */}
+      <KeyInsightsAccordion output={output} />
+```
+
+**Step 2: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: Clean.
+
+**Step 3: Commit**
+
+```bash
+git add src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx
+git commit -m "feat: add 10-year projection, ambulance alert, and key insights accordion"
+```
+
+---
+
+### Task 9: Add Next Steps panel + SharePanel
+
+**Files:**
+- Modify: `src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx`
+
+**Step 1: Add the two components ABOVE the default export**
+
+```tsx
+// ─── Next Steps ───────────────────────────────────────────────────────────────
+
+function NextStepsPanel({ output }: { output: CalculationOutput }) {
+  const { scenarioResult, mlsResult } = output;
+  const insuranceRecommended = scenarioResult.recommendedScenario !== 'no-insurance';
+
+  const steps = [
+    insuranceRecommended
+      ? {
+          n: 1,
+          title: 'Compare real policies on PrivateHealth.gov.au',
+          body: 'The government\'s comparison site shows all registered policies. Filter by tier and state. Avoid comparison sites that earn commissions — they may not show all options.',
+        }
+      : {
+          n: 1,
+          title: 'Review your decision annually',
+          body: 'Your income, health needs, and premiums change over time. Set a calendar reminder each April (when annual premium increases take effect) to reassess.',
+        },
+    {
+      n: 2,
+      title: 'Check your exact MLS income',
+      body: 'Your MLS income includes taxable income + reportable fringe benefits + net investment losses + reportable super contributions. Check your most recent Notice of Assessment for the accurate figure.',
+    },
+    {
+      n: 3,
+      title: 'Factor in waiting periods',
+      body: 'New hospital policies have a 12-month waiting period for pre-existing conditions and obstetrics. If you\'re planning a procedure, take out cover well in advance.',
+    },
+    {
+      n: 4,
+      title: 'Consider your excess options',
+      body: 'A higher excess ($500–$750) reduces your annual premium significantly. If you\'re in good health and unlikely to be admitted, a high excess is often the right choice.',
+    },
+    {
+      n: 5,
+      title: 'Ask about no-gap arrangements',
+      body: 'Before any elective procedure, ask your specialist: "Do you have a no-gap agreement with [your insurer]?" This can save you hundreds of dollars in gap fees.',
+    },
+    {
+      n: 6,
+      title: 'Set an April reminder',
+      body: 'Private health premiums increase each April. Review your policy annually — it\'s easy to switch insurers and keep your waiting periods.',
+    },
+  ];
+
+  return (
+    <section aria-labelledby="next-steps-heading" className="card">
+      <h2 id="next-steps-heading" className="text-xl font-bold mb-4">
+        Next Steps
+      </h2>
+      <ol className="space-y-4">
+        {steps.map(({ n, title, body }) => (
+          <li key={n} className="flex gap-4">
+            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center">
+              {n}
+            </span>
+            <div>
+              <p className="font-semibold text-sm">{title}</p>
+              <p className="text-sm text-muted mt-0.5">{body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      {/* Disclaimer */}
+      <div className="mt-6 p-3 rounded-lg bg-background border border-border text-xs text-muted">
+        <strong>Disclaimer:</strong> This calculator provides general information only. It is
+        not financial or tax advice. Tax laws change annually — verify current thresholds with
+        the{' '}
+        <a
+          href="https://www.ato.gov.au"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline"
+        >
+          ATO
+        </a>{' '}
+        and{' '}
+        <a
+          href="https://www.privatehealth.gov.au"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline"
+        >
+          Services Australia
+        </a>
+        .
+      </div>
+    </section>
+  );
+}
+
+// ─── Share Panel ──────────────────────────────────────────────────────────────
+
+function SharePanel() {
+  function copyLink() {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href).catch(() => {});
+    }
+  }
+
+  function emailResults() {
+    if (typeof window !== 'undefined') {
+      const subject = encodeURIComponent('My private health insurance analysis');
+      const body = encodeURIComponent(
+        `I used the Private Health Insurance Calculator to analyse my situation.\n\nSee my results: ${window.location.href}`,
+      );
+      window.open(`mailto:?subject=${subject}&body=${body}`);
+    }
+  }
+
+  function printResults() {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  }
+
+  return (
+    <section className="card print:hidden">
+      <h2 className="text-lg font-bold mb-3">Share or save your results</h2>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={copyLink}
+          className="btn-secondary text-sm"
+        >
+          Copy link
+        </button>
+        <button
+          type="button"
+          onClick={emailResults}
+          className="btn-secondary text-sm"
+        >
+          Email results
+        </button>
+        <button
+          type="button"
+          onClick={printResults}
+          className="btn-secondary text-sm"
+        >
+          Print / Save PDF
+        </button>
+      </div>
+    </section>
+  );
+}
+```
+
+Now add these to the JSX in `ResultsClient`, after the Key Insights section and before the edit-answers link:
+
+```tsx
+      {/* ── Next Steps ── */}
+      <NextStepsPanel output={output} />
+
+      {/* ── Share ── */}
+      <SharePanel />
+```
+
+**Step 2: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: Clean.
+
+**Step 3: Commit**
+
+```bash
+git add src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx
+git commit -m "feat: add Next Steps panel and Share panel to results"
+```
+
+---
+
+### Task 10: Build restore flow (edit answers → wizard with state pre-filled)
+
+**Goal:** When users click "Edit your answers" on the results page, they return to the wizard with all their answers pre-filled at Step 5, so they can change any answer and recalculate.
+
+**Files:**
+- Modify: `src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx` (update edit link)
+- Modify: `src/app/should-i-get-private-health-insurance/page.tsx` (accept searchParams, restore state)
+
+**Step 1: Update the "Edit your answers" link in ResultsClient**
+
+Find the edit-answers button at the bottom of `ResultsClient` and replace it with:
+
+```tsx
+      {/* ── Edit answers link ── */}
+      <div className="text-center pt-4 border-t border-border">
+        <button
+          onClick={() => {
+            // Pass all wizard params back + restore=1 so the wizard page pre-fills answers
+            const restoreUrl =
+              `/should-i-get-private-health-insurance?restore=1&${searchParams.toString()}`;
+            router.push(restoreUrl);
+          }}
+          className="text-sm text-primary hover:underline"
+        >
+          ← Edit your answers
+        </button>
+      </div>
+```
+
+**Step 2: Update wizard page.tsx to accept searchParams and restore state**
+
+The current `page.tsx` passes no initialState. Update it to read searchParams and restore wizard state when `restore=1` is present.
+
+Replace `src/app/should-i-get-private-health-insurance/page.tsx` with:
+
+```tsx
+import type { Metadata } from 'next';
+import { SITE_URL, SITE_NAME } from '@/lib/siteConfig';
+import { WizardProvider } from '@/components/wizard/WizardContext';
+import WizardContainer from '@/components/wizard/WizardContainer';
+import { parseWizardParams } from '@/lib/wizardParams';
+import type { WizardState } from '@/lib/types';
+
+export const metadata: Metadata = {
+  title: `Should I Get Private Health Insurance? Calculator 2026 | ${SITE_NAME}`,
+  description:
+    'Compare the real cost of private health insurance vs going without. Personalised analysis based on your income, age, family situation, and health needs. FY 2025–26 rates.',
+  alternates: {
+    canonical: `${SITE_URL}/should-i-get-private-health-insurance`,
+  },
+  openGraph: {
+    title: 'Should I Get Private Health Insurance? | Free Calculator',
+    description:
+      'Find out if private health insurance saves you money or costs you more — personalised to your situation.',
+    url: `${SITE_URL}/should-i-get-private-health-insurance`,
+    siteName: SITE_NAME,
+    type: 'website',
+  },
+};
+
+interface Props {
+  searchParams: Record<string, string | string[] | undefined>;
+}
+
+export default function ShouldIGetPHIPage({ searchParams }: Props) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'Private Health Insurance Calculator',
+    description:
+      'Compare the cost of private health insurance vs going without — personalised to your income, age, and situation.',
+    url: `${SITE_URL}/should-i-get-private-health-insurance`,
+    applicationCategory: 'FinanceApplication',
+    operatingSystem: 'Any',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'AUD' },
+    creator: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+  };
+
+  // Restore wizard state if navigating back from results
+  let initialState: WizardState | undefined;
+  if (searchParams.restore === '1') {
+    const p = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(searchParams)
+          .filter(([, v]) => typeof v === 'string')
+          .map(([k, v]) => [k, v as string]),
+      ),
+    );
+    const inputs = parseWizardParams(p);
+    if (inputs) {
+      initialState = {
+        currentStep: 5, // return to review step
+        inputs,
+        isComplete: false,
+      };
+    }
+  }
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <WizardProvider initialState={initialState}>
+        <WizardContainer />
+      </WizardProvider>
+    </>
+  );
+}
+```
+
+**Step 3: TypeScript check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1 | head -20`
+Expected: Clean.
+
+**Step 4: Commit**
+
+```bash
+git add src/app/should-i-get-private-health-insurance/page.tsx \
+        src/app/should-i-get-private-health-insurance/results/ResultsClient.tsx
+git commit -m "feat: add edit-answers restore flow — results page restores wizard state"
+```
+
+---
+
+### Task 11: Full integration test
+
+**Step 1: Run TypeScript compilation check**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx tsc --noEmit --pretty 2>&1`
+Expected: Zero errors.
+
+**Step 2: Run full test suite**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx jest --passWithNoTests 2>&1 | tail -10`
+Expected: 132 tests pass (no new test regressions).
+
+**Step 3: Start dev server and verify manually**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && npx next dev -p 3004`
+Navigate to: `http://localhost:3004/should-i-get-private-health-insurance`
+
+Verify these flows:
+1. Step 1: Enter age 35, select Single, NSW → Next
+2. Step 2: Select $110k–$140k income → Next
+3. Step 3: Select "No — I've never had it" → Next
+4. Step 4: Click "No, just compare costs" → Skip to Review
+5. Step 5: Review cards show correct values. Live preview shows MLS Tier 2 (1.25%), rebate %, LHC loading. Click "Show Me the Numbers →"
+6. Results page: 3 scenario cards appear (No Insurance, Basic/Bronze, Silver/Gold). Recommendation banner shows. MLS breakdown shows $1,562/yr. No LHC loading. 10-year projection table renders. No ambulance alert (NSW shows alert). Key insights accordion expands.
+7. Click "← Edit your answers" → returns to wizard at Step 5 with all answers preserved.
+8. Change income to $90k–$110k → Show Me the Numbers → recommendation changes (likely "No Insurance" if below threshold).
+
+**Step 4: Final commit**
+
+```bash
+git add -A
+git commit -m "feat: Phase 7 complete — full flagship wizard with results page (tasks 7.3–7.15)"
+```
+
+**Step 5: Push to GitHub**
+
+Run: `cd "C:/Projects/1.3 Public_private health insurance Project" && git push origin main`
+Expected: Push succeeds with no errors.
+
+---
+
+## Execution Order
+
+1. **Task 1** — Wire Steps 3-4 into WizardContainer (quick, low risk)
+2. **Task 2** — wizardParams.ts URL codec (no dependencies)
+3. **Task 3** — runCalculations.ts orchestrator (depends on Tasks 1–2 conceptually, but no imports)
+4. **Task 4** — Step 5 Review (imports wizardParams + runCalculations)
+5. **Task 5** — Wire Step 5 into WizardContainer (depends on Task 4)
+6. **Task 6** — Results page + ResultsClient scaffold (imports wizardParams + runCalculations)
+7. **Task 7** — What This Means + MLS/LHC panels (add to ResultsClient)
+8. **Task 8** — Projection + Ambulance + Insights (add to ResultsClient)
+9. **Task 9** — Next Steps + SharePanel (add to ResultsClient)
+10. **Task 10** — Restore flow (modifies ResultsClient + wizard page)
+11. **Task 11** — Full integration test
