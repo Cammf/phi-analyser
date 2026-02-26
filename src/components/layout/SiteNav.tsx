@@ -11,6 +11,11 @@ import ThemeToggle from './ThemeToggle';
 
 const calculatorLinks = [
   {
+    href: '/should-i-get-private-health-insurance',
+    label: 'Should I Get PHI?',
+    description: 'Find out if private health insurance is right for you',
+  },
+  {
     href: '/private-health-insurance-calculator',
     label: 'PHI Calculator',
     description: 'Is private health insurance worth it for your situation?',
