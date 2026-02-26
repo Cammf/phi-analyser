@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { parseWizardParams } from '@/lib/wizardParams';
 import { runCalculations } from '@/lib/runCalculations';
@@ -97,6 +97,265 @@ function ScenarioCard({
   );
 }
 
+// ─── What This Means ─────────────────────────────────────────────────────────
+
+function WhatThisMeans({ output }: { output: CalculationOutput }) {
+  const { inputs, mlsResult, lhcResult, scenarioResult } = output;
+  const { age, familyType, coverStatus } = inputs;
+
+  const isUnder31       = age < 31;
+  const isRetiree       = age >= 65;
+  const isIncomeTriggered =
+    mlsResult.tier !== 'base' &&
+    scenarioResult.scenarios[1].year1Cost < mlsResult.annualMLS;
+  const hasFamily =
+    familyType === 'family' || familyType === 'single-parent' || familyType === 'couple';
+
+  let heading = 'What this means for you';
+  let message: React.ReactNode;
+
+  if (isUnder31) {
+    heading = "You're under 31 — now is the easiest time to decide";
+    message = (
+      <>
+        <p>
+          You don&apos;t have a Lifetime Health Cover loading yet — your premiums are at the base
+          rate. If you take out hospital cover before you turn 31, you lock in no loading forever
+          (as long as you keep the cover).
+        </p>
+        {mlsResult.tier === 'base' ? (
+          <p className="mt-3">
+            Your income is below the MLS threshold, so you won&apos;t pay a surcharge without
+            insurance. The decision is purely about whether you want private hospital access —
+            not a tax issue.
+          </p>
+        ) : (
+          <p className="mt-3">
+            Your income does trigger the MLS at {Math.round(mlsResult.mlsRate * 100)}%. Getting
+            even basic hospital cover would eliminate this surcharge — and at your age, your
+            premiums are at their lowest.
+          </p>
+        )}
+      </>
+    );
+  } else if (isRetiree) {
+    heading = 'Insurance decisions at 65+ are different';
+    message = (
+      <>
+        <p>
+          At {age}, you qualify for a higher government rebate on your premium —{' '}
+          {age >= 70 ? 'the maximum age tier (70+)' : 'the 65–69 age tier'}. This reduces the
+          cost of any hospital cover you choose.
+        </p>
+        <p className="mt-3">
+          Consider that health needs tend to increase with age. If you don&apos;t currently
+          have cover, the LHC loading and potential wait times for elective procedures are
+          worth factoring into the decision alongside the cost comparison above.
+        </p>
+      </>
+    );
+  } else if (isIncomeTriggered) {
+    heading = 'The numbers favour getting insurance';
+    message = (
+      <>
+        <p>
+          Your MLS of {formatDollars(mlsResult.annualMLS)}/year costs more than Basic/Bronze
+          cover after rebate. In purely financial terms, getting hospital cover saves you money
+          — you&apos;re paying a tax on not having insurance.
+        </p>
+        <p className="mt-3">
+          That said, Basic/Bronze is a limited product — it&apos;s mainly a tax-saving
+          strategy. If you actually want private hospital access and choice of doctor, you&apos;d
+          need at least Silver cover.
+        </p>
+        {lhcResult.loadingPercentage >= 0.20 && (
+          <p className="mt-3 text-warning font-medium">
+            Note: your LHC loading of {Math.round(lhcResult.loadingPercentage * 100)}% adds
+            significantly to any policy cost. Once you take out cover and hold it for 10 years,
+            this loading disappears.
+          </p>
+        )}
+      </>
+    );
+  } else if (hasFamily) {
+    heading = 'Family cover — the MLS threshold is doubled';
+    message = (
+      <>
+        <p>
+          Couples and families have double the MLS income threshold of singles. If your combined
+          household income is below $202,000, neither of you pays the surcharge — insurance is a
+          personal choice, not a financial obligation.
+        </p>
+        <p className="mt-3">
+          For families with young children, private hospital cover gives you access to private
+          obstetrics, choice of specialist, and shorter waits for non-urgent procedures. Whether
+          that&apos;s worth the premium depends on your health needs and priorities.
+        </p>
+      </>
+    );
+  } else {
+    heading = 'The honest picture';
+    message = (
+      <>
+        {mlsResult.tier === 'base' ? (
+          <p>
+            Your income is below the MLS threshold — you won&apos;t pay a surcharge without
+            insurance. Private hospital cover is a personal choice about access and convenience,
+            not a tax obligation.
+          </p>
+        ) : (
+          <p>
+            Your MLS of {formatDollars(mlsResult.annualMLS)}/year is the cost of going without
+            hospital cover. Whether insurance is worth it depends on whether the premium (after
+            rebate) represents better value than paying the surcharge and using the public system.
+          </p>
+        )}
+        {coverStatus === 'yes' ? (
+          <p className="mt-3">
+            You currently have hospital cover. If you&apos;re thinking of dropping it, remember
+            that you have a 3-year grace period (1,094 days) before your LHC loading starts
+            accruing again — but your 10-year removal clock resets if you lapse longer.
+          </p>
+        ) : (
+          <p className="mt-3">
+            The public hospital system provides good quality care for most conditions. The main
+            advantages of private cover are choice of specialist, private room, and shorter waits
+            for elective procedures. For emergency care, the public system is identical.
+          </p>
+        )}
+      </>
+    );
+  }
+
+  return (
+    <section aria-labelledby="what-this-means-heading" className="card">
+      <h2 id="what-this-means-heading" className="text-xl font-bold mb-4">
+        {heading}
+      </h2>
+      <div className="text-muted space-y-0 leading-relaxed">{message}</div>
+    </section>
+  );
+}
+
+// ─── MLS Breakdown ───────────────────────────────────────────────────────────
+
+const MLS_TIER_BADGE_COLORS: Record<string, string> = {
+  base: 'bg-secondary/10 text-secondary border-secondary/20',
+  '1':  'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300',
+  '2':  'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-300',
+  '3':  'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300',
+};
+
+const MLS_TIER_NAMES: Record<string, string> = {
+  base: 'Base (no surcharge)',
+  '1':  'Tier 1 — 1.0%',
+  '2':  'Tier 2 — 1.25%',
+  '3':  'Tier 3 — 1.5%',
+};
+
+function MLSBreakdownPanel({ output }: { output: CalculationOutput }) {
+  const { mlsResult } = output;
+  if (!mlsResult.isAboveThreshold) {
+    return (
+      <section aria-labelledby="mls-heading" className="card">
+        <h2 id="mls-heading" className="text-xl font-bold mb-3">
+          Medicare Levy Surcharge
+        </h2>
+        <div className="flex items-center gap-3">
+          <span className="inline-block px-2 py-0.5 rounded border text-sm font-semibold bg-secondary/10 text-secondary border-secondary/20">
+            No surcharge
+          </span>
+          <p className="text-muted text-sm">
+            Your income is below the MLS threshold — no surcharge applies.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section aria-labelledby="mls-heading" className="card">
+      <h2 id="mls-heading" className="text-xl font-bold mb-4">
+        Medicare Levy Surcharge
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Your MLS income</p>
+          <p className="text-lg font-bold">{formatDollars(mlsResult.mlsIncome)}</p>
+        </div>
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Rate applied</p>
+          <span className={`inline-block px-2 py-0.5 rounded border text-xs font-semibold ${MLS_TIER_BADGE_COLORS[mlsResult.tier]}`}>
+            {MLS_TIER_NAMES[mlsResult.tier]}
+          </span>
+        </div>
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Annual surcharge</p>
+          <p className="text-lg font-bold text-warning">{formatDollars(mlsResult.annualMLS)}</p>
+        </div>
+      </div>
+      {mlsResult.nextThreshold && (
+        <p className="text-xs text-muted mt-3">
+          Next threshold: {formatDollars(mlsResult.nextThreshold)} (rate increases to{' '}
+          {mlsResult.tier === '1' ? '1.25%' : '1.5%'}).
+        </p>
+      )}
+      <p className="text-xs text-muted mt-2">
+        Getting basic hospital cover eliminates this surcharge entirely.
+      </p>
+    </section>
+  );
+}
+
+// ─── LHC Panel ───────────────────────────────────────────────────────────────
+
+function LHCPanel({ output }: { output: CalculationOutput }) {
+  const { lhcResult } = output;
+  if (lhcResult.loadingPercentage === 0 && lhcResult.youthDiscount === 0) {
+    return (
+      <section aria-labelledby="lhc-heading" className="card">
+        <h2 id="lhc-heading" className="text-xl font-bold mb-3">
+          Lifetime Health Cover Loading
+        </h2>
+        <p className="text-secondary font-medium">
+          No LHC loading applies to you — your premiums are at the base rate.
+        </p>
+      </section>
+    );
+  }
+
+  const loadingPct = Math.round(lhcResult.loadingPercentage * 100);
+
+  return (
+    <section aria-labelledby="lhc-heading" className="card">
+      <h2 id="lhc-heading" className="text-xl font-bold mb-4">
+        Lifetime Health Cover Loading
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Your LHC loading</p>
+          <p className="text-lg font-bold text-warning">+{loadingPct}%</p>
+        </div>
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">Annual loading cost</p>
+          <p className="text-lg font-bold">{formatDollars(lhcResult.annualLoadingCost)}</p>
+        </div>
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted mb-1">10-year cumulative</p>
+          <p className="text-lg font-bold">{formatDollars(lhcResult.tenYearCumulativeLoading)}</p>
+        </div>
+      </div>
+      {lhcResult.yearsUntilLoadingRemoved !== null && (
+        <p className="text-sm text-muted mt-3">
+          If you take out hospital cover now, the loading will be removed after{' '}
+          {lhcResult.yearsUntilLoadingRemoved} more year
+          {lhcResult.yearsUntilLoadingRemoved !== 1 ? 's' : ''} of continuous cover.
+        </p>
+      )}
+    </section>
+  );
+}
+
 // ─── Main results client ─────────────────────────────────────────────────────
 
 export default function ResultsClient() {
@@ -179,7 +438,14 @@ export default function ResultsClient() {
         )}
       </section>
 
-      {/* Additional sections added in Tasks 7–9 */}
+      {/* ── What This Means ── */}
+      <WhatThisMeans output={output} />
+
+      {/* ── MLS Breakdown ── */}
+      <MLSBreakdownPanel output={output} />
+
+      {/* ── LHC Panel ── */}
+      <LHCPanel output={output} />
 
       {/* ── Edit answers link ── */}
       <div className="text-center pt-4 border-t border-border">
