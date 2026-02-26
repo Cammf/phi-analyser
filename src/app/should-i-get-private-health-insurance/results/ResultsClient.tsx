@@ -356,6 +356,233 @@ function LHCPanel({ output }: { output: CalculationOutput }) {
   );
 }
 
+// ─── 10-Year Projection ───────────────────────────────────────────────────────
+
+function ProjectionPanel({ output }: { output: CalculationOutput }) {
+  const { projectionResult } = output;
+  const { yearByYear, tenYearTotal, opportunityCost } = projectionResult;
+
+  return (
+    <section aria-labelledby="projection-heading" className="card">
+      <h2 id="projection-heading" className="text-xl font-bold mb-2">
+        10-Year Cost Projection
+      </h2>
+      <p className="text-sm text-muted mb-4">
+        Premiums grow at the historical average of{' '}
+        {Math.round(projectionResult.growthRateUsed * 100)}%/year.
+        {projectionResult.loadingRemovalYear !== null && (
+          <> LHC loading removed after Year {projectionResult.loadingRemovalYear}.</>
+        )}
+      </p>
+
+      {/* Totals summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 text-sm">
+        {[
+          { label: 'No Insurance', value: tenYearTotal.noInsurance },
+          { label: 'Basic / Bronze', value: tenYearTotal.basicBronze },
+          { label: 'Silver / Gold',  value: tenYearTotal.silverGold },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-background rounded-lg p-3 border border-border text-center">
+            <p className="text-muted mb-1">{label}</p>
+            <p className="text-lg font-bold">{formatDollars(value)}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Year-by-year table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left py-2 font-semibold bg-transparent">Year</th>
+              <th className="text-right py-2 font-semibold bg-transparent">No Insurance</th>
+              <th className="text-right py-2 font-semibold bg-transparent">Basic/Bronze</th>
+              <th className="text-right py-2 font-semibold bg-transparent">Silver/Gold</th>
+            </tr>
+          </thead>
+          <tbody>
+            {yearByYear.map((row) => (
+              <tr
+                key={row.year}
+                className={[
+                  'border-b border-border/50',
+                  row.lhcLoadingRemoved ? 'bg-secondary/5' : '',
+                ].join(' ')}
+              >
+                <td className="py-2">
+                  {row.calendarYear}
+                  {row.lhcLoadingRemoved && (
+                    <span className="ml-2 text-xs text-secondary font-medium">
+                      (loading removed)
+                    </span>
+                  )}
+                </td>
+                <td className="text-right py-2">{formatDollars(row.noInsuranceCost)}</td>
+                <td className="text-right py-2">{formatDollars(row.basicBronzeCost)}</td>
+                <td className="text-right py-2">{formatDollars(row.silverGoldCost)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-xs text-muted mt-3">
+        Opportunity cost of Silver/Gold premiums (invested at 5% p.a.):
+        approximately {formatDollars(opportunityCost)} over 10 years.
+      </p>
+    </section>
+  );
+}
+
+// ─── Ambulance Alert ─────────────────────────────────────────────────────────
+
+function AmbulanceAlert({ output }: { output: CalculationOutput }) {
+  const { inputs } = output;
+  const FREE_STATES = ['QLD', 'TAS'];
+  if (FREE_STATES.includes(inputs.state)) return null;
+
+  const AMBULANCE_COSTS: Record<string, { cost: string; note: string }> = {
+    VIC: { cost: 'up to $1,282',  note: 'per emergency call-out' },
+    NSW: { cost: 'around $401',   note: 'per emergency call-out' },
+    SA:  { cost: 'up to $1,046',  note: 'per emergency call-out' },
+    WA:  { cost: 'up to $943',    note: 'per emergency call-out' },
+    ACT: { cost: 'around $401',   note: 'per emergency call-out' },
+    NT:  { cost: 'up to $636',    note: 'per emergency call-out' },
+  };
+  const info = AMBULANCE_COSTS[inputs.state] ?? { cost: 'several hundred dollars', note: '' };
+
+  return (
+    <section className="card border-warning/30 bg-warning/5">
+      <h2 className="text-lg font-bold mb-2 flex items-center gap-2">
+        <span aria-hidden="true">🚑</span> Ambulance Cover — {inputs.state}
+      </h2>
+      <p className="text-sm text-muted">
+        In {inputs.state}, an emergency ambulance can cost{' '}
+        <strong>{info.cost}</strong> {info.note}. Private hospital cover typically includes
+        ambulance cover, or you can purchase an ambulance subscription separately.
+      </p>
+      <p className="text-xs text-muted mt-2">
+        An ambulance subscription in most states costs $30–$50/year for a single adult.
+      </p>
+    </section>
+  );
+}
+
+// ─── Key Insights Accordion ───────────────────────────────────────────────────
+
+function AccordionItem({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <details className="border-b border-border last:border-0">
+      <summary className="flex items-center justify-between py-4 cursor-pointer select-none font-medium hover:text-primary focus:outline-none">
+        {title}
+        <span className="ml-4 text-muted text-lg" aria-hidden="true">+</span>
+      </summary>
+      <div className="pb-4 text-sm text-muted space-y-2">{children}</div>
+    </details>
+  );
+}
+
+function KeyInsightsAccordion({ output }: { output: CalculationOutput }) {
+  const { mlsResult, rebateResult, lhcResult } = output;
+
+  return (
+    <section aria-labelledby="insights-heading" className="card">
+      <h2 id="insights-heading" className="text-xl font-bold mb-4">
+        Key Insights
+      </h2>
+      <div>
+        <AccordionItem title="How your MLS was calculated">
+          <p>
+            The Medicare Levy Surcharge is applied to your <strong>full MLS income</strong> at
+            the tier rate — not just the amount above the threshold. Your MLS income of{' '}
+            {formatDollars(mlsResult.mlsIncome)} falls in{' '}
+            <strong>
+              {mlsResult.tier === 'base'
+                ? 'the base tier (no surcharge)'
+                : `Tier ${mlsResult.tier}`}
+            </strong>
+            .
+          </p>
+          {mlsResult.isAboveThreshold && (
+            <p>
+              MLS income includes: taxable income + reportable fringe benefits + net
+              investment losses + reportable super contributions. Check your tax return for
+              these components.
+            </p>
+          )}
+        </AccordionItem>
+
+        <AccordionItem title="Understanding the government rebate">
+          <p>
+            Your rebate is{' '}
+            <strong>
+              {Math.round(rebateResult.rebatePercentage * 100 * 10) / 10}%
+            </strong>{' '}
+            (income tier: {rebateResult.tier}, age bracket: {rebateResult.ageBracket}).
+            Tier 3 earners (above $158,001 single / $316,001 family) receive 0% rebate.
+          </p>
+          <p>
+            The rebate is applied directly to your premium — you can claim it as a reduced
+            premium from your insurer, or claim it back in your tax return.
+          </p>
+        </AccordionItem>
+
+        <AccordionItem title="What Basic/Bronze actually covers">
+          <p>
+            Basic hospital cover is required to meet the minimum standards for MLS avoidance,
+            but it covers very little: rehabilitation, psychiatric care, and palliative care
+            only. Bronze adds some additional services but restricts most elective procedures.
+          </p>
+          <p>
+            If you need a hip replacement, cataract surgery, or any major elective procedure,
+            you would need at least Silver cover (and often Gold for some procedures).
+          </p>
+        </AccordionItem>
+
+        <AccordionItem title="Gap fees: the hidden cost">
+          <p>
+            Even with hospital cover, you often pay a gap fee — the difference between what
+            your doctor charges and what Medicare + your insurer pays. The average gap per
+            hospital episode is around <strong>$478</strong>.
+          </p>
+          <p>
+            Ask your specialist upfront about &quot;no-gap&quot; or &quot;known-gap&quot;
+            arrangements. Your insurer can tell you which doctors in your area have no-gap
+            agreements.
+          </p>
+        </AccordionItem>
+
+        <AccordionItem title="Private health in emergencies">
+          <p>
+            In a genuine medical emergency, the public hospital system treats you
+            immediately — private insurance makes no difference to emergency care. Private
+            cover is most valuable for <em>elective</em> procedures and specialist access.
+          </p>
+        </AccordionItem>
+
+        <AccordionItem title="Waiting periods for new policies">
+          <p>
+            If you take out a new policy, you&apos;ll face waiting periods before you can
+            claim:
+          </p>
+          <ul className="list-disc pl-4 space-y-1">
+            <li>Hospital: 12 months for pre-existing conditions</li>
+            <li>Psychiatric: 2 months</li>
+            <li>Obstetrics / pregnancy: 12 months</li>
+            <li>Accidents: immediately covered (no waiting period)</li>
+          </ul>
+        </AccordionItem>
+      </div>
+    </section>
+  );
+}
+
 // ─── Main results client ─────────────────────────────────────────────────────
 
 export default function ResultsClient() {
@@ -446,6 +673,15 @@ export default function ResultsClient() {
 
       {/* ── LHC Panel ── */}
       <LHCPanel output={output} />
+
+      {/* ── 10-Year Projection ── */}
+      <ProjectionPanel output={output} />
+
+      {/* ── Ambulance Alert ── */}
+      <AmbulanceAlert output={output} />
+
+      {/* ── Key Insights ── */}
+      <KeyInsightsAccordion output={output} />
 
       {/* ── Edit answers link ── */}
       <div className="text-center pt-4 border-t border-border">
