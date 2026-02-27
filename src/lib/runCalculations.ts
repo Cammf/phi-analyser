@@ -1,15 +1,17 @@
 // =============================================================================
 // RUN CALCULATIONS — Flagship wizard orchestrator
 // Calls the full pipeline: resolveInputs → MLS → rebate → LHC →
-//   scenario comparison → projection → extras (optional)
+//   scenario comparison → projection → extras (optional) → wait times
 // =============================================================================
 
 import type {
   WizardInputs,
   CalculationOutput,
   ExtrasResult,
-  ExtrasCalculationBreakdown,
   WaitTimeResult,
+  WaitTimeEntry,
+  CoverTier,
+  HospitalTier,
 } from '@/lib/types';
 import {
   resolveInputs,
@@ -21,78 +23,45 @@ import { calculateRebate } from '@/lib/rebateCalculations';
 import { calculateLHCLoading } from '@/lib/lhcCalculations';
 import { calculateScenarioComparison } from '@/lib/scenarioCalculations';
 import { calculateProjectionFromScenario } from '@/lib/projectionCalculations';
+import { calculateExtrasValue } from '@/lib/extrasCalculations';
+import waitTimeData from '@/data/procedures/wait-times.json';
 
-// ─── Extras calculation constants ───────────────────────────────────────────
-// Source: APRA / PHIO data (approximate average benefit per service visit)
-const DENTAL_BENEFIT_PER_VISIT    = 180;  // typical check-up + clean benefit
-const OPTICAL_BENEFIT_PER_CLAIM   = 220;  // typical frames/lenses benefit
-const PHYSIO_BENEFIT_PER_SESSION  = 45;   // typical single physio session benefit
+// ─── Wait time helpers ───────────────────────────────────────────────────────
 
-// Annual extras premiums per single adult (matches premiums/current.json)
-const EXTRAS_PREMIUMS_SINGLE: Record<string, number> = {
-  none:          0,
-  basic:       540,
-  mid:         900,
-  comprehensive: 1380,
-};
+const TIER_RANK: Record<string, number> = { basic: 1, bronze: 2, silver: 3, gold: 4 };
 
-// Extras family multipliers (based on industry averages)
-const EXTRAS_FAMILY_MULTIPLIERS: Record<string, number> = {
-  single:          1.0,
-  couple:          1.8,
-  family:          1.8,
-  'single-parent': 1.5,
-};
+function parseCoverRequiredTier(coverRequired: string): CoverTier {
+  const lower = coverRequired.toLowerCase();
+  if (lower.includes('gold'))   return 'gold';
+  if (lower.includes('silver')) return 'silver';
+  if (lower.includes('bronze')) return 'bronze';
+  return 'basic';
+}
 
-// ─── Extras value calculation ────────────────────────────────────────────────
+function buildWaitTimeResults(inputs: WizardInputs): WaitTimeResult[] {
+  if (!inputs.plannedProcedures.length) return [];
 
-function calculateExtrasValue(inputs: WizardInputs): ExtrasResult {
-  const premiumSingle = EXTRAS_PREMIUMS_SINGLE[inputs.extrasDesired] ?? 0;
-  const multiplier    = EXTRAS_FAMILY_MULTIPLIERS[inputs.familyType]  ?? 1.0;
-  const annualPremium = Math.round(premiumSingle * multiplier);
+  const userTier: HospitalTier =
+    inputs.coverStatus === 'yes' ? inputs.currentTier : 'none';
 
-  const estimatedAnnualBenefit = Math.round(
-    inputs.dentalVisitsPerYear   * DENTAL_BENEFIT_PER_VISIT  +
-    inputs.opticalClaimsPerYear  * OPTICAL_BENEFIT_PER_CLAIM +
-    inputs.physioSessionsPerYear * PHYSIO_BENEFIT_PER_SESSION,
-  );
+  return inputs.plannedProcedures.flatMap((procId) => {
+    const entry = (waitTimeData.procedures as WaitTimeEntry[]).find((p) => p.id === procId);
+    if (!entry) return [];
 
-  const netAnnualCost  = annualPremium - estimatedAnnualBenefit;
-  const benefitRatio   = annualPremium > 0 ? estimatedAnnualBenefit / annualPremium : 0;
-  const isFinanciallyRational = netAnnualCost <= 0;
+    const requiredTier    = parseCoverRequiredTier(entry.coverRequired);
+    const coverSufficient =
+      userTier !== 'none' && TIER_RANK[userTier] >= TIER_RANK[requiredTier];
+    const upgradeRequired: CoverTier | null = coverSufficient ? null : requiredTier;
 
-  let recommendation: string;
-  if (annualPremium === 0) {
-    recommendation = 'No extras cover selected.';
-  } else if (isFinanciallyRational) {
-    recommendation =
-      `Based on your usage, ${inputs.extrasDesired} extras cover is likely worthwhile — ` +
-      `you'd claim back approximately $${estimatedAnnualBenefit.toLocaleString()} on a ` +
-      `$${annualPremium.toLocaleString()} premium.`;
-  } else {
-    recommendation =
-      `Based on your usage, you'd pay $${netAnnualCost.toLocaleString()} more per year ` +
-      `than you'd claim back. Extras cover may not be financially rational for your situation.`;
-  }
-
-  const breakdown: ExtrasCalculationBreakdown = {
-    premiumPaid:         annualPremium,
-    estimatedBenefits:   estimatedAnnualBenefit,
-    netCost:             netAnnualCost,
-    breakEvenFrequency:  annualPremium > 0
-      ? `~${Math.ceil(annualPremium / Math.max(DENTAL_BENEFIT_PER_VISIT, 1))} dental visits/year`
-      : 'n/a',
-  };
-
-  return {
-    isFinanciallyRational,
-    annualPremium,
-    estimatedAnnualBenefit,
-    netAnnualCost,
-    benefitRatio,
-    recommendation,
-    calculationBreakdown: breakdown,
-  };
+    return [{
+      procedure:       entry,
+      publicWaitDays:  entry.publicWaitDays.median,
+      privateWaitDays: entry.privateWaitDays.typical,
+      savingDays:      entry.waitTimeSavingDays,
+      coverSufficient,
+      upgradeRequired,
+    }];
+  });
 }
 
 // ─── Main orchestrator ───────────────────────────────────────────────────────
@@ -145,11 +114,20 @@ export function runCalculations(inputs: WizardInputs): CalculationOutput {
 
   const extrasResult: ExtrasResult | null =
     inputs.includeHealthNeeds && inputs.extrasDesired !== 'none'
-      ? calculateExtrasValue(inputs)
+      ? calculateExtrasValue({
+          extrasTier:            inputs.extrasDesired,
+          familyType:            resolved.familyType,
+          mlsIncome:             resolved.mlsIncome,
+          dependentChildren:     resolved.dependentChildren,
+          ageBracket:            resolved.ageBracket,
+          dentalVisitsPerYear:   inputs.dentalVisitsPerYear,
+          opticalClaimsPerYear:  inputs.opticalClaimsPerYear,
+          physioSessionsPerYear: inputs.physioSessionsPerYear,
+          chiroSessionsPerYear:  0,  // wizard captures physio+chiro combined as physioSessionsPerYear
+        })
       : null;
 
-  // Wait time results are populated in Phase 8
-  const waitTimeResults: WaitTimeResult[] = [];
+  const waitTimeResults: WaitTimeResult[] = buildWaitTimeResults(inputs);
 
   return {
     inputs,
