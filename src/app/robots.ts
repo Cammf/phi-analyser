@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/mls-calculator/results', '/lhc-loading-calculator/results'],
+      disallow: ['/mls-calculator/results', '/lhc-loading-calculator/results', '/extras-calculator/results'],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

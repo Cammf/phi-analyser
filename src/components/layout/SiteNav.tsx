@@ -30,6 +30,16 @@ const calculatorLinks = [
     label: 'LHC Calculator',
     description: 'Estimate your Lifetime Health Cover loading',
   },
+  {
+    href: '/extras-calculator',
+    label: 'Extras Calculator',
+    description: 'Is extras (general treatment) cover worth the cost for you?',
+  },
+  {
+    href: '/wait-times',
+    label: 'Wait Times',
+    description: 'Compare public vs private hospital wait times for common procedures',
+  },
 ];
 
 const guideLinks = [
