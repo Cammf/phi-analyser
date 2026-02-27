@@ -45,7 +45,7 @@ export default function ExtrasCalculatorClient() {
   const [incomeRange, setIncomeRange]    = useState<IncomeRange | null>(null);
   const [exactIncome, setExactIncome]    = useState<number | null>(null);
   const [familyType, setFamilyType]      = useState<FamilyType | null>(null);
-  const [dependentChildren, setChildren] = useState(1);
+  const [dependentChildren, setDependentChildren] = useState(1);
   const [extrasTier, setExtrasTier]      = useState<ExtrasTier | null>(null);
   const [dental, setDental]              = useState(0);
   const [optical, setOptical]            = useState(0);
@@ -112,7 +112,7 @@ export default function ExtrasCalculatorClient() {
               selectedType={familyType}
               dependentChildren={dependentChildren}
               onTypeChange={setFamilyType}
-              onChildrenChange={setChildren}
+              onChildrenChange={setDependentChildren}
             />
           </section>
 
@@ -131,7 +131,7 @@ export default function ExtrasCalculatorClient() {
                   name="extrasTier"
                   value={opt.value}
                   checked={extrasTier === opt.value}
-                  onChange={(val) => setExtrasTier(val as ExtrasTier)}
+                  onChange={() => setExtrasTier(opt.value)}
                   label={opt.label}
                   description={opt.description}
                 />
