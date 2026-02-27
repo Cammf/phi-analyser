@@ -10,10 +10,14 @@ import {
   CHIRO_SUB_LIMITS,
   EXTRAS_PREMIUMS_SINGLE,
   EXTRAS_FAMILY_MULTIPLIERS,
+  DENTAL_BENEFIT_PER_VISIT,
+  OPTICAL_BENEFIT_PER_CLAIM,
+  PHYSIO_BENEFIT_PER_SESSION,
+  CHIRO_BENEFIT_PER_SESSION,
 } from '@/lib/extrasCalculations';
 import { calculateRebate } from '@/lib/rebateCalculations';
 import { INCOME_RANGE_MIDPOINTS } from '@/lib/resolveInputs';
-import { formatDollars, formatPercentage } from '@/lib/format';
+import { formatDollars, formatPercentage, formatIncomeRange } from '@/lib/format';
 import type { IncomeRange, FamilyType, ExtrasTier, AgeBracket } from '@/lib/types';
 
 const TIER_LABELS: Record<ExtrasTier, string> = {
@@ -28,15 +32,6 @@ const FAMILY_LABELS: Record<FamilyType, string> = {
   couple:          'Couple',
   family:          'Family',
   'single-parent': 'Single parent',
-};
-
-const RANGE_LABELS: Record<IncomeRange, string> = {
-  'under-90k':  'Under $90,000',
-  '90k-110k':   '$90,000 – $110,000',
-  '110k-140k':  '$110,000 – $140,000',
-  '140k-175k':  '$140,000 – $175,000',
-  '175k-250k':  '$175,000 – $250,000',
-  'over-250k':  'Over $250,000',
 };
 
 export default function ExtrasResultsClient() {
@@ -120,41 +115,35 @@ export default function ExtrasResultsClient() {
                      : isCloseCall            ? 'Close call'
                                              : 'Likely not worth it';
 
-  // Per-service breakdown values (benefit amounts are not exported from extrasCalculations)
-  const DENTAL_BENEFIT  = 175;
-  const OPTICAL_BENEFIT = 250;
-  const PHYSIO_BENEFIT  = 45;
-  const CHIRO_BENEFIT   = 40;
-
   const tier = params.tier;
   const serviceRows = [
     {
       service:    'Dental',
       usage:      `${params.dental} visit${params.dental !== 1 ? 's' : ''}/yr`,
-      rawBenefit: params.dental * DENTAL_BENEFIT,
+      rawBenefit: params.dental * DENTAL_BENEFIT_PER_VISIT,
       sublimit:   DENTAL_SUB_LIMITS[tier],
-      benefit:    Math.min(params.dental * DENTAL_BENEFIT, DENTAL_SUB_LIMITS[tier]),
+      benefit:    Math.min(params.dental * DENTAL_BENEFIT_PER_VISIT, DENTAL_SUB_LIMITS[tier]),
     },
     {
       service:    'Optical',
       usage:      `${params.optical} claim${params.optical !== 1 ? 's' : ''}/yr`,
-      rawBenefit: params.optical * OPTICAL_BENEFIT,
+      rawBenefit: params.optical * OPTICAL_BENEFIT_PER_CLAIM,
       sublimit:   OPTICAL_SUB_LIMITS[tier],
-      benefit:    Math.min(params.optical * OPTICAL_BENEFIT, OPTICAL_SUB_LIMITS[tier]),
+      benefit:    Math.min(params.optical * OPTICAL_BENEFIT_PER_CLAIM, OPTICAL_SUB_LIMITS[tier]),
     },
     {
       service:    'Physio',
       usage:      `${params.physio} session${params.physio !== 1 ? 's' : ''}/yr`,
-      rawBenefit: params.physio * PHYSIO_BENEFIT,
+      rawBenefit: params.physio * PHYSIO_BENEFIT_PER_SESSION,
       sublimit:   PHYSIO_SUB_LIMITS[tier],
-      benefit:    Math.min(params.physio * PHYSIO_BENEFIT, PHYSIO_SUB_LIMITS[tier]),
+      benefit:    Math.min(params.physio * PHYSIO_BENEFIT_PER_SESSION, PHYSIO_SUB_LIMITS[tier]),
     },
     {
       service:    'Chiro',
       usage:      `${params.chiro} session${params.chiro !== 1 ? 's' : ''}/yr`,
-      rawBenefit: params.chiro * CHIRO_BENEFIT,
+      rawBenefit: params.chiro * CHIRO_BENEFIT_PER_SESSION,
       sublimit:   CHIRO_SUB_LIMITS[tier],
-      benefit:    Math.min(params.chiro * CHIRO_BENEFIT, CHIRO_SUB_LIMITS[tier]),
+      benefit:    Math.min(params.chiro * CHIRO_BENEFIT_PER_SESSION, CHIRO_SUB_LIMITS[tier]),
     },
   ];
 
@@ -186,7 +175,7 @@ export default function ExtrasResultsClient() {
             {verdictLabel}
           </span>
           <p className="text-sm text-muted">
-            {FAMILY_LABELS[params.family]} · {params.exactIncome ? formatDollars(params.mlsIncome) : (RANGE_LABELS[params.range] ?? params.range)} ·{' '}
+            {FAMILY_LABELS[params.family]} · {params.exactIncome ? formatDollars(params.mlsIncome) : formatIncomeRange(params.range)} ·{' '}
             {TIER_LABELS[tier]}
           </p>
         </div>
