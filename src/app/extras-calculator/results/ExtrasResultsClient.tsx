@@ -2,7 +2,15 @@
 
 import { useMemo, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { calculateExtrasValue } from '@/lib/extrasCalculations';
+import {
+  calculateExtrasValue,
+  DENTAL_SUB_LIMITS,
+  OPTICAL_SUB_LIMITS,
+  PHYSIO_SUB_LIMITS,
+  CHIRO_SUB_LIMITS,
+  EXTRAS_PREMIUMS_SINGLE,
+  EXTRAS_FAMILY_MULTIPLIERS,
+} from '@/lib/extrasCalculations';
 import { calculateRebate } from '@/lib/rebateCalculations';
 import { INCOME_RANGE_MIDPOINTS } from '@/lib/resolveInputs';
 import { formatDollars, formatPercentage } from '@/lib/format';
@@ -74,14 +82,8 @@ export default function ExtrasResultsClient() {
 
   const rebateResult = useMemo(() => {
     if (!params || params.tier === 'none') return null;
-    const EXTRAS_PREMIUMS_SINGLE: Record<ExtrasTier, number> = {
-      none: 0, basic: 540, mid: 900, comprehensive: 1380,
-    };
-    const EXTRAS_MULTIPLIERS: Record<FamilyType, number> = {
-      single: 1.0, couple: 1.8, family: 1.8, 'single-parent': 1.5,
-    };
     const premiumBeforeRebate = Math.round(
-      EXTRAS_PREMIUMS_SINGLE[params.tier] * EXTRAS_MULTIPLIERS[params.family]
+      EXTRAS_PREMIUMS_SINGLE[params.tier] * EXTRAS_FAMILY_MULTIPLIERS[params.family]
     );
     return calculateRebate({
       mlsIncome:                 params.mlsIncome,
@@ -118,15 +120,11 @@ export default function ExtrasResultsClient() {
                      : isCloseCall            ? 'Close call'
                                              : 'Likely not worth it';
 
-  // Per-service breakdown values
+  // Per-service breakdown values (benefit amounts are not exported from extrasCalculations)
   const DENTAL_BENEFIT  = 175;
   const OPTICAL_BENEFIT = 250;
   const PHYSIO_BENEFIT  = 45;
   const CHIRO_BENEFIT   = 40;
-  const DENTAL_SUBLIMITS:  Record<ExtrasTier, number> = { none: 0, basic: 300, mid: 500,  comprehensive: 900 };
-  const OPTICAL_SUBLIMITS: Record<ExtrasTier, number> = { none: 0, basic: 200, mid: 250,  comprehensive: 400 };
-  const PHYSIO_SUBLIMITS:  Record<ExtrasTier, number> = { none: 0, basic: 0,   mid: 450,  comprehensive: 700 };
-  const CHIRO_SUBLIMITS:   Record<ExtrasTier, number> = { none: 0, basic: 0,   mid: 400,  comprehensive: 550 };
 
   const tier = params.tier;
   const serviceRows = [
@@ -134,29 +132,29 @@ export default function ExtrasResultsClient() {
       service:    'Dental',
       usage:      `${params.dental} visit${params.dental !== 1 ? 's' : ''}/yr`,
       rawBenefit: params.dental * DENTAL_BENEFIT,
-      sublimit:   DENTAL_SUBLIMITS[tier],
-      benefit:    Math.min(params.dental * DENTAL_BENEFIT, DENTAL_SUBLIMITS[tier]),
+      sublimit:   DENTAL_SUB_LIMITS[tier],
+      benefit:    Math.min(params.dental * DENTAL_BENEFIT, DENTAL_SUB_LIMITS[tier]),
     },
     {
       service:    'Optical',
       usage:      `${params.optical} claim${params.optical !== 1 ? 's' : ''}/yr`,
       rawBenefit: params.optical * OPTICAL_BENEFIT,
-      sublimit:   OPTICAL_SUBLIMITS[tier],
-      benefit:    Math.min(params.optical * OPTICAL_BENEFIT, OPTICAL_SUBLIMITS[tier]),
+      sublimit:   OPTICAL_SUB_LIMITS[tier],
+      benefit:    Math.min(params.optical * OPTICAL_BENEFIT, OPTICAL_SUB_LIMITS[tier]),
     },
     {
       service:    'Physio',
       usage:      `${params.physio} session${params.physio !== 1 ? 's' : ''}/yr`,
       rawBenefit: params.physio * PHYSIO_BENEFIT,
-      sublimit:   PHYSIO_SUBLIMITS[tier],
-      benefit:    Math.min(params.physio * PHYSIO_BENEFIT, PHYSIO_SUBLIMITS[tier]),
+      sublimit:   PHYSIO_SUB_LIMITS[tier],
+      benefit:    Math.min(params.physio * PHYSIO_BENEFIT, PHYSIO_SUB_LIMITS[tier]),
     },
     {
       service:    'Chiro',
       usage:      `${params.chiro} session${params.chiro !== 1 ? 's' : ''}/yr`,
       rawBenefit: params.chiro * CHIRO_BENEFIT,
-      sublimit:   CHIRO_SUBLIMITS[tier],
-      benefit:    Math.min(params.chiro * CHIRO_BENEFIT, CHIRO_SUBLIMITS[tier]),
+      sublimit:   CHIRO_SUB_LIMITS[tier],
+      benefit:    Math.min(params.chiro * CHIRO_BENEFIT, CHIRO_SUB_LIMITS[tier]),
     },
   ];
 
@@ -296,8 +294,8 @@ export default function ExtrasResultsClient() {
         <h2 className="mb-3">What this means for you</h2>
         <p className="text-muted">{result.recommendation}</p>
         <p className="text-muted mt-3">
-          Break-even point: you&apos;d need approximately{' '}
-          <strong>{result.calculationBreakdown.breakEvenFrequency}</strong> to cover the premium cost.
+          <strong>Break-even summary:</strong>{' '}
+          {result.calculationBreakdown.breakEvenFrequency}
         </p>
       </section>
 
