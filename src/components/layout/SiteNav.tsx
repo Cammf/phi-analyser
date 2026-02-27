@@ -16,11 +16,6 @@ const calculatorLinks = [
     description: 'Find out if private health insurance is right for you',
   },
   {
-    href: '/private-health-insurance-calculator',
-    label: 'PHI Calculator',
-    description: 'Is private health insurance worth it for your situation?',
-  },
-  {
     href: '/mls-calculator',
     label: 'MLS Calculator',
     description: 'Calculate your Medicare Levy Surcharge exposure',
@@ -252,7 +247,7 @@ export default function SiteNav() {
 
           {/* Primary CTA */}
           <Link
-            href="/private-health-insurance-calculator"
+            href="/should-i-get-private-health-insurance"
             onClick={close}
             className="ml-2 btn-primary text-sm !py-2 !px-4 !min-h-[40px]"
           >
@@ -323,7 +318,7 @@ export default function SiteNav() {
               </Link>
               <div className="flex items-center justify-between mt-3">
                 <Link
-                  href="/private-health-insurance-calculator"
+                  href="/should-i-get-private-health-insurance"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex-1 btn-primary text-center text-sm"
                 >

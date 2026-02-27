@@ -29,7 +29,7 @@ export default function SiteFooter() {
             </h3>
             <ul className="space-y-2">
               {[
-                { href: '/private-health-insurance-calculator', label: 'PHI Calculator' },
+                { href: '/should-i-get-private-health-insurance', label: 'Should I Get PHI?' },
                 { href: '/mls-calculator', label: 'MLS Calculator' },
                 { href: '/lhc-loading-calculator', label: 'LHC Calculator' },
               ].map((link) => (
