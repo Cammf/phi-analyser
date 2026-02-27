@@ -15,8 +15,8 @@ function formatDays(days: number): string {
 
 function getCoverTierFromRequired(coverRequired: string): string {
   const lower = coverRequired.toLowerCase();
-  if (lower.includes('gold')) return 'gold';
   if (lower.includes('silver')) return 'silver';
+  if (lower.includes('gold'))   return 'gold';
   if (lower.includes('bronze')) return 'bronze';
   return 'basic';
 }
@@ -102,6 +102,7 @@ export default function WaitTimesClient() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedId(null)}
+            aria-pressed={selectedId === null}
             className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
               selectedId === null
                 ? 'bg-primary text-white border-primary'
@@ -114,6 +115,7 @@ export default function WaitTimesClient() {
             <button
               key={p.id}
               onClick={() => setSelectedId(selectedId === p.id ? null : p.id)}
+              aria-pressed={selectedId === p.id}
               className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                 selectedId === p.id
                   ? 'bg-primary text-white border-primary'
@@ -132,22 +134,22 @@ export default function WaitTimesClient() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-background">
-                <th className="text-left px-4 py-3 font-semibold text-text-main">
+                <th scope="col" className="text-left px-4 py-3 font-semibold text-text-main">
                   Procedure
                 </th>
-                <th className="text-right px-4 py-3 font-semibold text-text-main whitespace-nowrap">
+                <th scope="col" className="text-right px-4 py-3 font-semibold text-text-main whitespace-nowrap">
                   Public median
                 </th>
-                <th className="text-right px-4 py-3 font-semibold text-text-main whitespace-nowrap">
+                <th scope="col" className="text-right px-4 py-3 font-semibold text-text-main whitespace-nowrap">
                   Public 90th %ile
                 </th>
-                <th className="text-right px-4 py-3 font-semibold text-text-main whitespace-nowrap">
+                <th scope="col" className="text-right px-4 py-3 font-semibold text-text-main whitespace-nowrap">
                   Private typical
                 </th>
-                <th className="text-right px-4 py-3 font-semibold text-text-main whitespace-nowrap">
+                <th scope="col" className="text-right px-4 py-3 font-semibold text-text-main whitespace-nowrap">
                   Days saved
                 </th>
-                <th className="text-left px-4 py-3 font-semibold text-text-main">
+                <th scope="col" className="text-left px-4 py-3 font-semibold text-text-main">
                   Cover required
                 </th>
               </tr>
@@ -370,8 +372,8 @@ export default function WaitTimesClient() {
               </span>
             </div>
             <ul className="space-y-1.5 text-sm text-text-main mb-4">
-              {privateBenefits.map((benefit, i) => (
-                <li key={i} className="flex items-start gap-2">
+              {privateBenefits.map((benefit) => (
+                <li key={benefit} className="flex items-start gap-2">
                   <span className="text-secondary mt-0.5 shrink-0">&#10003;</span>
                   <span>{benefit}</span>
                 </li>
@@ -407,8 +409,8 @@ export default function WaitTimesClient() {
               </span>
             </div>
             <ul className="space-y-1.5 text-sm text-text-main mb-4">
-              {publicBenefits.map((benefit, i) => (
-                <li key={i} className="flex items-start gap-2">
+              {publicBenefits.map((benefit) => (
+                <li key={benefit} className="flex items-start gap-2">
                   <span className="text-secondary mt-0.5 shrink-0">&#10003;</span>
                   <span>{benefit}</span>
                 </li>
