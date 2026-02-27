@@ -102,7 +102,7 @@ export interface ExtrasValueInputs {
  *   3. Apply government rebate via calculateRebate() to get annualPremium.
  *   4. Calculate each service benefit, capped at the tier's sub-limit.
  *   5. Sum benefits, compute netAnnualCost, benefitRatio, isFinanciallyRational.
- *   6. Build breakEvenFrequency based on dental visits.
+ *   6. Build breakEvenFrequency as a dollar shortfall / saving string.
  */
 export function calculateExtrasValue(inputs: ExtrasValueInputs): ExtrasResult {
   const {
@@ -123,8 +123,11 @@ export function calculateExtrasValue(inputs: ExtrasValueInputs): ExtrasResult {
       premiumPaid:        0,
       estimatedBenefits:  0,
       netCost:            0,
-      breakEvenFrequency: 'n/a',
+      breakEvenFrequency: 'n/a — no extras selected',
     };
+    // isFinanciallyRational: false — not because extras is irrational, but because
+    // no cover is selected. Callers should check annualPremium === 0 to distinguish
+    // the "no selection" case from a genuine "not worth it" result.
     return {
       isFinanciallyRational:  false,
       annualPremium:           0,
@@ -173,9 +176,10 @@ export function calculateExtrasValue(inputs: ExtrasValueInputs): ExtrasResult {
   const benefitRatio           = annualPremium > 0 ? estimatedAnnualBenefit / annualPremium : 0;
   const isFinanciallyRational  = netAnnualCost <= 0;
 
-  // Step 6 — Break-even frequency (based on dental as the reference service)
-  const breakEvenVisits = Math.ceil(annualPremium / DENTAL_BENEFIT_PER_VISIT);
-  const breakEvenFrequency = `~${breakEvenVisits} dental visits/year to break even`;
+  // Step 6 — Break-even summary expressed as dollar shortfall / saving
+  const breakEvenFrequency = netAnnualCost > 0
+    ? `$${Math.round(netAnnualCost).toLocaleString()} more paid than claimed back per year`
+    : `Saving ~$${Math.abs(Math.round(netAnnualCost)).toLocaleString()} per year`;
 
   // Build recommendation string
   let recommendation: string;
